@@ -17,9 +17,24 @@
     justify-content: center;
     padding: 20px;
     color: #fff;
-    gap: 16px;
   }
 
+  /* ===== Экраны ===== */
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    animation: fadeIn 0.35s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Форма ===== */
   .controls {
     width: 100%;
     max-width: 360px;
@@ -30,6 +45,11 @@
     padding: 16px;
     border-radius: 16px;
     border: 1px solid #222;
+  }
+  .controls h2 {
+    font-size: 18px;
+    margin-bottom: 6px;
+    text-align: center;
   }
   .controls label { font-size: 13px; color: #888; }
   .controls input {
@@ -76,6 +96,7 @@
     flex: 0 0 auto;
   }
 
+  /* ===== Чек ===== */
   .receipt-wrap {
     position: relative;
     width: 100%;
@@ -110,6 +131,7 @@
     white-space: nowrap;
   }
   .receipt-content { position: relative; z-index: 2; }
+
   .check { width: 110px; height: 110px; margin: 0 auto 20px; display: block; }
   .check path {
     stroke-dasharray: 200;
@@ -117,6 +139,7 @@
     animation: draw 0.8s ease forwards;
   }
   @keyframes draw { to { stroke-dashoffset: 0; } }
+
   .title { font-size: 22px; font-weight: 700; margin-bottom: 14px; }
   .amount { font-size: 40px; font-weight: 800; margin-bottom: 10px; letter-spacing: -1px; }
   .commission { font-size: 15px; color: #9ca3af; margin-bottom: 4px; }
@@ -150,10 +173,13 @@
     border-radius: 14px;
     border: none;
     font-size: 16px;
-    cursor: default;
+    cursor: pointer;
   }
+  .btn-main:active { transform: scale(0.98); }
+
   .hint { font-size: 11px; color: #4b5563; text-align: center; max-width: 360px; }
 
+  /* ===== Модалки ===== */
   .modal-bg {
     position: fixed;
     inset: 0;
@@ -241,58 +267,68 @@
 </head>
 <body>
 
-  <div class="controls">
-    <label>Сумма (₽)</label>
-    <input id="amountInput" type="number" value="37" placeholder="37">
+  <!-- ================= ЭКРАН 1: ФОРМА ================= -->
+  <div class="screen active" id="screenForm">
+    <div class="controls">
+      <h2>Новый перевод</h2>
 
-    <label>Получатель</label>
-    <div class="input-with-btn">
-      <input id="recipientInput" type="text" value="Светлана Анатольевна З." placeholder="Имя">
-      <button onclick="randomRecipient()" title="Случайный получатель">🎲</button>
-    </div>
+      <label>Сумма (₽)</label>
+      <input id="amountInput" type="number" value="37" placeholder="37">
 
-    <label>Комиссия (₽)</label>
-    <input id="commissionInput" type="number" value="0" placeholder="0">
-
-    <button onclick="updateReceipt()">Обновить чек</button>
-    <button class="secondary" onclick="downloadPNG()">Скачать PNG</button>
-    <button class="ghost" onclick="openAdmin()">⚙ Админ-панель</button>
-  </div>
-
-  <div class="receipt-wrap" id="receipt">
-    <div class="watermark" id="watermark"></div>
-
-    <div class="receipt-content">
-      <svg class="check" viewBox="0 0 100 100">
-        <defs>
-          <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#a3e635"/>
-            <stop offset="100%" stop-color="#22d3ee"/>
-          </linearGradient>
-        </defs>
-        <path d="M20 52 L42 74 L82 28"
-              fill="none"
-              stroke="url(#grad)"
-              stroke-width="12"
-              stroke-linecap="round"
-              stroke-linejoin="round"/>
-      </svg>
-
-      <div class="title">Перевод доставлен</div>
-      <div class="amount" id="amountView">37 ₽</div>
-      <div class="commission" id="commissionView">Комиссия 0 ₽</div>
-      <div class="recipient" id="recipientView">Светлана Анатольевна З.</div>
-
-      <div class="row">
-        <button class="btn">📄 Чек</button>
-        <button class="btn">Автоперевод</button>
+      <label>Получатель</label>
+      <div class="input-with-btn">
+        <input id="recipientInput" type="text" value="Светлана Анатольевна З." placeholder="Имя">
+        <button onclick="randomRecipient()" title="Случайный получатель">🎲</button>
       </div>
-      <button class="btn-main">На главный</button>
+
+      <label>Комиссия (₽)</label>
+      <input id="commissionInput" type="number" value="0" placeholder="0">
+
+      <button onclick="submitTransfer()">Перевести</button>
+      <button class="ghost" onclick="openAdmin()">⚙ Админ-панель</button>
     </div>
+
+    <div class="hint">Шуточный генератор. Не является банковским документом.</div>
   </div>
 
-  <div class="hint">Шуточный генератор. Не является банковским документом.</div>
+  <!-- ================= ЭКРАН 2: ЧЕК ================= -->
+  <div class="screen" id="screenReceipt">
+    <div class="receipt-wrap" id="receipt">
+      <div class="watermark" id="watermark"></div>
 
+      <div class="receipt-content">
+        <svg class="check" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#a3e635"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 52 L42 74 L82 28"
+                fill="none"
+                stroke="url(#grad)"
+                stroke-width="12"
+                stroke-linecap="round"
+                stroke-linejoin="round"/>
+        </svg>
+
+        <div class="title">Перевод доставлен</div>
+        <div class="amount" id="amountView">37 ₽</div>
+        <div class="commission" id="commissionView">Комиссия 0 ₽</div>
+        <div class="recipient" id="recipientView">Светлана Анатольевна З.</div>
+
+        <div class="row">
+          <button class="btn" onclick="downloadPNG()">📄 Чек</button>
+          <button class="btn" onclick="backToForm()">Автоперевод</button>
+        </div>
+        <button class="btn-main" onclick="backToForm()">На главный</button>
+      </div>
+    </div>
+
+    <div class="hint">Шуточный генератор. Не является банковским документом.</div>
+  </div>
+
+  <!-- ================= МОДАЛКИ ================= -->
   <div class="modal-bg" id="loginModal">
     <div class="modal">
       <h3>Вход в админ-панель</h3>
@@ -314,15 +350,14 @@
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
-  </div>
-  <script>
-  /* ===== Защита пароля =====
-     Пароль хранится как SHA-256 хэш. Открытого пароля в коде нет.
-     Чтобы получить хэш от своего пароля, открой консоль (F12) и выполни:
+ </div>
+ <script>
+  /* ===== Пароль хранится как SHA-256 хэш =====
+     Свой хэш получить: F12 → Console →
      crypto.subtle.digest('SHA-256', new TextEncoder().encode('ТВОЙ_ПАРОЛЬ'))
        .then(b => console.log([...new Uint8Array(b)]
          .map(x => x.toString(16).padStart(2,'0')).join('')));
-     Потом вставь результат в PASS_HASH ниже.
+     Результат вставить в PASS_HASH.
   */
   const PASS_HASH = "8e3a5c9b1f7d2e6a4c8b0f3d9e1a7c5b2f8d4e6a0c3b9f1d7e5a2c8b4f6d0e9a";
 
@@ -365,14 +400,45 @@
     }
   }
 
-  function updateReceipt() {
+  /* ===== Переключение экранов ===== */
+  function showScreen(id) {
+    document.querySelectorAll('.screen')
+      .forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ===== Форма → чек ===== */
+  function submitTransfer() {
     const amount = document.getElementById('amountInput').value || 0;
     const recipient = document.getElementById('recipientInput').value || '—';
     const commission = document.getElementById('commissionInput').value || 0;
 
+    if (!amount || Number(amount) <= 0) {
+      alert('Введите сумму больше 0');
+      return;
+    }
+    if (!recipient.trim()) {
+      alert('Введите получателя');
+      return;
+    }
+
     document.getElementById('amountView').textContent = amount + ' ₽';
     document.getElementById('commissionView').textContent = 'Комиссия ' + commission + ' ₽';
     document.getElementById('recipientView').textContent = recipient;
+
+    /* Перезапускаем анимацию галочки */
+    const checkPath = document.querySelector('.check path');
+    checkPath.style.animation = 'none';
+    void checkPath.offsetWidth;
+    checkPath.style.animation = '';
+
+    showScreen('screenReceipt');
+  }
+
+  /* ===== Чек → форма ===== */
+  function backToForm() {
+    showScreen('screenForm');
   }
 
   function randomRecipient() {
@@ -384,9 +450,9 @@
       attempts++;
     } while (next === el.value && NAMES.length > 1 && attempts < 20);
     el.value = next;
-    updateReceipt();
   }
 
+  /* ===== Админка ===== */
   function openAdmin() {
     if (isAdmin) {
       document.getElementById('adminModal').classList.add('show');
@@ -431,7 +497,6 @@
     sw.classList.toggle('on', watermarkEnabled);
     document.getElementById('watermark')
       .classList.toggle('hidden', !watermarkEnabled);
-
     document.getElementById('adminMsg').textContent =
       watermarkEnabled ? 'Вотермарка включена' : 'Вотермарка выключена';
   }
@@ -441,6 +506,7 @@
     closeModal('adminModal');
   }
 
+  /* ===== Скачать PNG ===== */
   async function downloadPNG() {
     const node = document.getElementById('receipt');
     const rect = node.getBoundingClientRect();
@@ -464,7 +530,6 @@
       ctx.fillStyle = '#ff2d2d';
       ctx.font = '900 22px sans-serif';
       ctx.textAlign = 'center';
-
       for (let y = -rect.height; y < rect.height; y += 60) {
         for (let x = -rect.width; x < rect.width; x += 120) {
           ctx.fillText('ФЕЙК', x, y);
@@ -479,7 +544,6 @@
     ctx.lineJoin = 'round';
     const cx = rect.width / 2;
     const cy = 80;
-
     ctx.beginPath();
     ctx.moveTo(cx - 30, cy);
     ctx.lineTo(cx - 5, cy + 25);
@@ -488,28 +552,15 @@
 
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
-
     ctx.font = '700 22px sans-serif';
     ctx.fillText('Перевод доставлен', cx, 170);
-
     ctx.font = '800 40px sans-serif';
-    ctx.fillText(
-      document.getElementById('amountView').textContent,
-      cx, 220
-    );
-
+    ctx.fillText(document.getElementById('amountView').textContent, cx, 220);
     ctx.fillStyle = '#9ca3af';
     ctx.font = '15px sans-serif';
-    ctx.fillText(
-      document.getElementById('commissionView').textContent,
-      cx, 250
-    );
-
+    ctx.fillText(document.getElementById('commissionView').textContent, cx, 250);
     ctx.fillStyle = '#6b7280';
-    ctx.fillText(
-      document.getElementById('recipientView').textContent,
-      cx, 275
-    );
+    ctx.fillText(document.getElementById('recipientView').textContent, cx, 275);
 
     const link = document.createElement('a');
     link.download = 'receipt.png';
@@ -517,14 +568,9 @@
     link.click();
   }
 
+  /* ===== Инициализация ===== */
   document.addEventListener('DOMContentLoaded', () => {
     initWatermark();
-    updateReceipt();
-
-    ['amountInput', 'recipientInput', 'commissionInput'].forEach(id => {
-      document.getElementById(id)
-        .addEventListener('input', updateReceipt);
-    });
 
     document.getElementById('passInput')
       .addEventListener('keydown', e => {
@@ -540,4 +586,4 @@
 </script>
 
 </body>
-</html>
+ </html>
