@@ -3,20 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор чеков</title>
+<title>Перевод доставлен</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: radial-gradient(circle at 50% 0%, #0a1f1a 0%, #050a08 60%, #000 100%);
+    font-family: 'Onest', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(ellipse at 50% 0%, #0d2420 0%, #071612 40%, #000 100%);
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
     color: #fff;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ===== Экраны ===== */
@@ -24,168 +27,224 @@
     display: none;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
     width: 100%;
-    animation: fadeIn 0.35s ease;
+    animation: fadeIn 0.3s ease;
   }
   .screen.active { display: flex; }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
   /* ===== Форма ===== */
   .controls {
     width: 100%;
-    max-width: 360px;
+    max-width: 320px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: #111;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1px solid #222;
+    background: #101010;
+    padding: 20px;
+    border-radius: 22px;
+    border: 1px solid #1c1c1c;
   }
   .controls h2 {
-    font-size: 18px;
-    margin-bottom: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
     text-align: center;
+    letter-spacing: -0.3px;
   }
-  .controls label { font-size: 13px; color: #888; }
+  .controls label {
+    font-size: 13px;
+    color: #8a8a8a;
+    font-weight: 500;
+  }
   .controls input {
-    background: #1c1c1c;
-    border: 1px solid #2a2a2a;
+    background: #1a1a1a;
+    border: 1px solid #262626;
     color: #fff;
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
     font-size: 15px;
+    font-family: inherit;
     outline: none;
     width: 100%;
     transition: border-color 0.2s;
   }
-  .controls input:focus { border-color: #4ade80; }
+  .controls input:focus { border-color: #21a038; }
   .controls button {
-    background: #4ade80;
-    color: #000;
+    background: #21a038;
+    color: #fff;
     border: none;
-    padding: 12px;
-    border-radius: 12px;
+    padding: 14px;
+    border-radius: 14px;
     font-size: 15px;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
     transition: transform 0.1s, opacity 0.2s;
+    margin-top: 4px;
   }
-  .controls button.secondary { background: #2a2a2a; color: #fff; }
   .controls button.ghost {
     background: transparent;
-    color: #6b7280;
-    border: 1px solid #2a2a2a;
+    color: #6b6b6b;
+    border: 1px solid #262626;
     font-size: 13px;
-    padding: 8px;
+    padding: 10px;
     font-weight: 400;
+    margin-top: 0;
   }
   .controls button:active { transform: scale(0.98); }
-  .controls button:hover { opacity: 0.9; }
 
   .input-with-btn { display: flex; gap: 8px; }
   .input-with-btn button {
     padding: 0 14px;
-    background: #2a2a2a;
+    background: #1a1a1a;
     color: #fff;
     font-size: 18px;
     flex: 0 0 auto;
+    margin-top: 0;
+    border-radius: 12px;
+    border: 1px solid #262626;
   }
 
-  /* ===== Чек ===== */
+  /* ===== Карточка чека ===== */
   .receipt-wrap {
     position: relative;
     width: 100%;
-    max-width: 360px;
-    border-radius: 20px;
+    max-width: 320px;
+    border-radius: 24px;
     overflow: hidden;
     background: #0d0d0d;
-    padding: 32px 24px 24px;
+    padding: 44px 24px 24px;
     text-align: center;
-    border: 1px solid #1a1a1a;
-    box-shadow: 0 0 60px rgba(74, 222, 128, 0.08);
+    border: 1px solid #171717;
+    box-shadow: 0 0 80px rgba(33, 160, 56, 0.10);
   }
+
   .watermark {
     position: absolute;
     inset: -50%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     align-content: center;
-    gap: 40px 20px;
+    gap: 55px 25px;
     transform: rotate(-30deg);
     pointer-events: none;
     z-index: 1;
-    opacity: 0.14;
+    opacity: 0.13;
   }
   .watermark.hidden { display: none; }
   .watermark span {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 900;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     color: #ff2d2d;
     text-transform: uppercase;
     white-space: nowrap;
   }
+
   .receipt-content { position: relative; z-index: 2; }
 
-  .check { width: 110px; height: 110px; margin: 0 auto 20px; display: block; }
+  /* Галочка */
+  .check {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 22px;
+    display: block;
+  }
   .check path {
     stroke-dasharray: 200;
     stroke-dashoffset: 200;
-    animation: draw 0.8s ease forwards;
+    animation: draw 0.7s ease forwards 0.1s;
   }
   @keyframes draw { to { stroke-dashoffset: 0; } }
 
-  .title { font-size: 22px; font-weight: 700; margin-bottom: 14px; }
-  .amount { font-size: 40px; font-weight: 800; margin-bottom: 10px; letter-spacing: -1px; }
-  .commission { font-size: 15px; color: #9ca3af; margin-bottom: 4px; }
+  /* Заголовок */
+  .title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+
+  /* Сумма */
+  .amount {
+    font-size: 46px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -1.5px;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* Комиссия и получатель */
+  .commission {
+    font-size: 15px;
+    color: #8a8a8a;
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
   .recipient {
     font-size: 15px;
-    color: #6b7280;
-    margin-bottom: 24px;
+    color: #6b6b6b;
+    margin-bottom: 26px;
     word-break: break-word;
+    font-weight: 500;
   }
-  .row { display: flex; gap: 10px; margin-bottom: 12px; }
+
+  /* Кнопки в ряд */
+  .row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
   .btn {
     flex: 1;
-    background: #1f1f1f;
+    background: #1c1c1c;
     border: none;
     color: #fff;
     font-size: 15px;
-    padding: 14px;
-    border-radius: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 15px 10px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    cursor: default;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s;
   }
+  .btn:hover { background: #232323; }
+  .btn:active { transform: scale(0.98); }
+  .btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* Главная кнопка */
   .btn-main {
     width: 100%;
     background: #fff;
     color: #000;
     font-weight: 600;
-    padding: 16px;
-    border-radius: 14px;
+    font-family: inherit;
+    padding: 17px;
+    border-radius: 16px;
     border: none;
     font-size: 16px;
     cursor: pointer;
+    transition: transform 0.1s, opacity 0.15s;
   }
-  .btn-main:active { transform: scale(0.98); }
-
-  .hint { font-size: 11px; color: #4b5563; text-align: center; max-width: 360px; }
+  .btn-main:active { transform: scale(0.98); opacity: 0.9; }
 
   /* ===== Модалки ===== */
   .modal-bg {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -196,33 +255,36 @@
   .modal {
     background: #111;
     border: 1px solid #222;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 24px;
     width: 100%;
     max-width: 320px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    font-family: inherit;
   }
-  .modal h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
   .modal input {
     background: #1c1c1c;
     border: 1px solid #2a2a2a;
     color: #fff;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 15px;
-    outline: none;
-  }
-  .modal input:focus { border-color: #4ade80; }
-  .modal button {
-    background: #4ade80;
-    color: #000;
-    border: none;
-    padding: 12px;
+    padding: 12px 14px;
     border-radius: 12px;
     font-size: 15px;
+    font-family: inherit;
+    outline: none;
+  }
+  .modal input:focus { border-color: #21a038; }
+  .modal button {
+    background: #21a038;
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 13px;
+    font-size: 15px;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
   }
   .modal button.cancel {
@@ -231,14 +293,14 @@
     font-weight: 400;
   }
   .modal .err { color: #ff5555; font-size: 13px; min-height: 16px; }
-  .modal .ok { color: #4ade80; font-size: 13px; min-height: 16px; }
+  .modal .ok { color: #21a038; font-size: 13px; min-height: 16px; }
   .toggle-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: #1c1c1c;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 14px;
+    border-radius: 12px;
   }
   .toggle-row span { font-size: 14px; }
   .switch {
@@ -249,8 +311,9 @@
     border-radius: 13px;
     cursor: pointer;
     transition: 0.2s;
+    flex-shrink: 0;
   }
-  .switch.on { background: #4ade80; }
+  .switch.on { background: #21a038; }
   .switch::after {
     content: '';
     position: absolute;
@@ -267,7 +330,7 @@
 </head>
 <body>
 
-  <!-- ================= ЭКРАН 1: ФОРМА ================= -->
+  <!-- ===== ЭКРАН 1: ФОРМА ===== -->
   <div class="screen active" id="screenForm">
     <div class="controls">
       <h2>Новый перевод</h2>
@@ -287,11 +350,9 @@
       <button onclick="submitTransfer()">Перевести</button>
       <button class="ghost" onclick="openAdmin()">⚙ Админ-панель</button>
     </div>
-
-    <div class="hint">Шуточный генератор. Не является банковским документом.</div>
   </div>
 
-  <!-- ================= ЭКРАН 2: ЧЕК ================= -->
+  <!-- ===== ЭКРАН 2: ЧЕК ===== -->
   <div class="screen" id="screenReceipt">
     <div class="receipt-wrap" id="receipt">
       <div class="watermark" id="watermark"></div>
@@ -301,13 +362,14 @@
           <defs>
             <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stop-color="#a3e635"/>
-              <stop offset="100%" stop-color="#22d3ee"/>
+              <stop offset="50%" stop-color="#22d3ee"/>
+              <stop offset="100%" stop-color="#22c1c3"/>
             </linearGradient>
           </defs>
-          <path d="M20 52 L42 74 L82 28"
+          <path d="M18 52 L42 76 L84 26"
                 fill="none"
                 stroke="url(#grad)"
-                stroke-width="12"
+                stroke-width="13"
                 stroke-linecap="round"
                 stroke-linejoin="round"/>
         </svg>
@@ -318,17 +380,23 @@
         <div class="recipient" id="recipientView">Светлана Анатольевна З.</div>
 
         <div class="row">
-          <button class="btn" onclick="downloadPNG()">📄 Чек</button>
+          <button class="btn" onclick="downloadPNG()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="13" y2="17"/>
+            </svg>
+            Чек
+          </button>
           <button class="btn" onclick="backToForm()">Автоперевод</button>
         </div>
         <button class="btn-main" onclick="backToForm()">На главный</button>
       </div>
     </div>
-
-    <div class="hint">Шуточный генератор. Не является банковским документом.</div>
   </div>
 
-  <!-- ================= МОДАЛКИ ================= -->
+  <!-- ===== МОДАЛКИ ===== -->
   <div class="modal-bg" id="loginModal">
     <div class="modal">
       <h3>Вход в админ-панель</h3>
@@ -350,24 +418,10 @@
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
- </div>
- <script>
-  /* ===== Пароль хранится как SHA-256 хэш =====
-     Свой хэш получить: F12 → Console →
-     crypto.subtle.digest('SHA-256', new TextEncoder().encode('ТВОЙ_ПАРОЛЬ'))
-       .then(b => console.log([...new Uint8Array(b)]
-         .map(x => x.toString(16).padStart(2,'0')).join('')));
-     Результат вставить в PASS_HASH.
-  */
-  const PASS_HASH = "8e3a5c9b1f7d2e6a4c8b0f3d9e1a7c5b2f8d4e6a0c3b9f1d7e5a2c8b4f6d0e9a";
-
-  async function sha256(str) {
-    const buf = new TextEncoder().encode(str);
-    const hash = await crypto.subtle.digest('SHA-256', buf);
-    return [...new Uint8Array(hash)]
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
+           </div>
+           <script>
+  /* ===== Пароль админки (работает сразу) ===== */
+  const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
     "Светлана Анатольевна З.",
@@ -384,7 +438,8 @@
     "Максим Игоревич П.",
     "Анна Викторовна Г.",
     "Павел Денисович Н.",
-    "Татьяна Юрьевна О."
+    "Татьяна Юрьевна О.",
+    "Ситников Матвей А."
   ];
 
   let isAdmin = false;
@@ -427,7 +482,7 @@
     document.getElementById('commissionView').textContent = 'Комиссия ' + commission + ' ₽';
     document.getElementById('recipientView').textContent = recipient;
 
-    /* Перезапускаем анимацию галочки */
+    /* перезапуск анимации галочки */
     const checkPath = document.querySelector('.check path');
     checkPath.style.animation = 'none';
     void checkPath.offsetWidth;
@@ -436,15 +491,13 @@
     showScreen('screenReceipt');
   }
 
-  /* ===== Чек → форма ===== */
   function backToForm() {
     showScreen('screenForm');
   }
 
   function randomRecipient() {
     const el = document.getElementById('recipientInput');
-    let next;
-    let attempts = 0;
+    let next, attempts = 0;
     do {
       next = NAMES[Math.floor(Math.random() * NAMES.length)];
       attempts++;
@@ -464,7 +517,7 @@
     setTimeout(() => document.getElementById('passInput').focus(), 60);
   }
 
-  async function tryLogin() {
+  function tryLogin() {
     const val = document.getElementById('passInput').value;
     const err = document.getElementById('loginErr');
 
@@ -473,9 +526,7 @@
       return;
     }
 
-    const h = await sha256(val);
-
-    if (h === PASS_HASH) {
+    if (val === ADMIN_PASSWORD) {
       isAdmin = true;
       err.textContent = '';
       closeModal('loginModal');
@@ -510,7 +561,7 @@
   async function downloadPNG() {
     const node = document.getElementById('receipt');
     const rect = node.getBoundingClientRect();
-    const scale = 2;
+    const scale = 3;
 
     const canvas = document.createElement('canvas');
     canvas.width = rect.width * scale;
@@ -519,53 +570,90 @@
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
 
+    /* фон карточки */
+    const r = 24;
     ctx.fillStyle = '#0d0d0d';
-    ctx.fillRect(0, 0, rect.width, rect.height);
+    roundRect(ctx, 0, 0, rect.width, rect.height, r);
+    ctx.fill();
 
+    /* вотермарка */
     if (watermarkEnabled) {
       ctx.save();
       ctx.translate(rect.width / 2, rect.height / 2);
       ctx.rotate(-30 * Math.PI / 180);
-      ctx.globalAlpha = 0.14;
+      ctx.globalAlpha = 0.13;
       ctx.fillStyle = '#ff2d2d';
-      ctx.font = '900 22px sans-serif';
+      ctx.font = '900 24px Onest, sans-serif';
       ctx.textAlign = 'center';
-      for (let y = -rect.height; y < rect.height; y += 60) {
-        for (let x = -rect.width; x < rect.width; x += 120) {
+      for (let y = -rect.height; y < rect.height; y += 80) {
+        for (let x = -rect.width; x < rect.width; x += 150) {
           ctx.fillText('ФЕЙК', x, y);
         }
       }
       ctx.restore();
     }
 
-    ctx.strokeStyle = '#4ade80';
-    ctx.lineWidth = 12;
+    /* галочка с градиентом */
+    const grad = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+    grad.addColorStop(0, '#a3e635');
+    grad.addColorStop(0.5, '#22d3ee');
+    grad.addColorStop(1, '#22c1c3');
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 13;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
     const cx = rect.width / 2;
-    const cy = 80;
+    const cy = 44 + 48;
+    const s = 96 / 100;
+
     ctx.beginPath();
-    ctx.moveTo(cx - 30, cy);
-    ctx.lineTo(cx - 5, cy + 25);
-    ctx.lineTo(cx + 35, cy - 25);
+    ctx.moveTo(cx + (18 - 50) * s, cy + (52 - 50) * s);
+    ctx.lineTo(cx + (42 - 50) * s, cy + (76 - 50) * s);
+    ctx.lineTo(cx + (84 - 50) * s, cy + (26 - 50) * s);
     ctx.stroke();
 
+    /* тексты */
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
-    ctx.font = '700 22px sans-serif';
-    ctx.fillText('Перевод доставлен', cx, 170);
-    ctx.font = '800 40px sans-serif';
-    ctx.fillText(document.getElementById('amountView').textContent, cx, 220);
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '15px sans-serif';
-    ctx.fillText(document.getElementById('commissionView').textContent, cx, 250);
-    ctx.fillStyle = '#6b7280';
-    ctx.fillText(document.getElementById('recipientView').textContent, cx, 275);
+
+    ctx.font = '700 24px Onest, sans-serif';
+    ctx.fillText('Перевод доставлен', cx, cy + 78);
+
+    ctx.font = '800 46px Onest, sans-serif';
+    ctx.fillText(
+      document.getElementById('amountView').textContent,
+      cx, cy + 130
+    );
+
+    ctx.fillStyle = '#8a8a8a';
+    ctx.font = '500 15px Onest, sans-serif';
+    ctx.fillText(
+      document.getElementById('commissionView').textContent,
+      cx, cy + 158
+    );
+
+    ctx.fillStyle = '#6b6b6b';
+    ctx.fillText(
+      document.getElementById('recipientView').textContent,
+      cx, cy + 180
+    );
 
     const link = document.createElement('a');
     link.download = 'receipt.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
   }
 
   /* ===== Инициализация ===== */
@@ -586,4 +674,4 @@
 </script>
 
 </body>
- </html>
+</html>
