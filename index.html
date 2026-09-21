@@ -2,14 +2,19 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Перевод доставлен</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
 
   body {
     font-family: 'Onest', -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -20,25 +25,44 @@
       linear-gradient(180deg, #07120e 0%, #030706 100%);
     background-attachment: fixed;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
     color: #fff;
     -webkit-font-smoothing: antialiased;
+    position: fixed;
+    inset: 0;
   }
 
   .screen {
     display: none;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     width: 100%;
+    height: 100%;
     animation: fadeIn 0.3s ease;
   }
   .screen.active { display: flex; }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  #screenForm {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  #screenReceipt {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .controls {
@@ -51,6 +75,7 @@
     padding: 20px;
     border-radius: 22px;
     border: 1px solid #1c1c1c;
+    margin: auto 0;
   }
   .controls h2 {
     font-size: 20px;
@@ -77,6 +102,7 @@
     transition: border-color 0.2s;
   }
   .controls input:focus { border-color: #21a038; }
+  .controls input::placeholder { color: #4a4a4a; }
   .controls button {
     background: #21a038;
     color: #fff;
@@ -148,7 +174,13 @@
     white-space: nowrap;
   }
 
-  .receipt-content { position: relative; z-index: 2; }
+  .receipt-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
   .check {
     width: 118px;
@@ -169,6 +201,8 @@
     margin-bottom: 18px;
     letter-spacing: -0.4px;
     color: #fff;
+    text-align: center;
+    width: 100%;
   }
 
   .amount {
@@ -178,6 +212,8 @@
     letter-spacing: -1.3px;
     color: #fff;
     line-height: 1;
+    text-align: center;
+    width: 100%;
   }
 
   .commission {
@@ -185,6 +221,8 @@
     color: #8a8a8a;
     margin-bottom: 3px;
     font-weight: 500;
+    text-align: center;
+    width: 100%;
   }
   .recipient {
     font-size: 15px;
@@ -192,12 +230,15 @@
     margin-bottom: 26px;
     word-break: break-word;
     font-weight: 500;
+    text-align: center;
+    width: 100%;
   }
 
   .row {
     display: flex;
     gap: 10px;
     margin-bottom: 10px;
+    width: 100%;
   }
   .btn {
     flex: 1;
@@ -331,16 +372,16 @@
       <h2>Новый перевод</h2>
 
       <label>Сумма (₽)</label>
-      <input id="amountInput" type="number" value="37" placeholder="37">
+      <input id="amountInput" type="number" placeholder="Введите сумму">
 
       <label>Получатель</label>
       <div class="input-with-btn">
-        <input id="recipientInput" type="text" value="Светлана Анатольевна З." placeholder="Имя">
+        <input id="recipientInput" type="text" placeholder="Введите имя">
         <button onclick="randomRecipient()" title="Случайный получатель">🎲</button>
       </div>
 
       <label>Комиссия (₽)</label>
-      <input id="commissionInput" type="number" value="0" placeholder="0">
+      <input id="commissionInput" type="number" placeholder="Введите комиссию">
 
       <button onclick="submitTransfer()">Перевести</button>
       <button class="ghost" onclick="openAdmin()">⚙ Админ-панель</button>
@@ -371,9 +412,9 @@
         </svg>
 
         <div class="title">Перевод доставлен</div>
-        <div class="amount" id="amountView">37 ₽</div>
-        <div class="commission" id="commissionView">Комиссия 0 ₽</div>
-        <div class="recipient" id="recipientView">Светлана Анатольевна З.</div>
+        <div class="amount" id="amountView">— ₽</div>
+        <div class="commission" id="commissionView">Комиссия — ₽</div>
+        <div class="recipient" id="recipientView">—</div>
 
         <div class="row">
           <button class="btn" onclick="downloadPNG()">
@@ -413,9 +454,8 @@
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
-  </div>
-
-<script>
+ </div>
+ <script>
   const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
@@ -440,6 +480,45 @@
   let isAdmin = false;
   let watermarkEnabled = true;
 
+  function lockScroll(lock) {
+    if (lock) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+    }
+  }
+
+  document.addEventListener('touchmove', (e) => {
+    if (document.getElementById('screenReceipt').classList.contains('active')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('wheel', (e) => {
+    if (document.getElementById('screenReceipt').classList.contains('active')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('keydown', (e) => {
+    if (document.getElementById('screenReceipt').classList.contains('active')) {
+      const keys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End',' '];
+      if (keys.includes(e.key)) e.preventDefault();
+    }
+  });
+
   function initWatermark() {
     const wm = document.getElementById('watermark');
     wm.innerHTML = '';
@@ -454,25 +533,31 @@
     document.querySelectorAll('.screen')
       .forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (id === 'screenReceipt') {
+      lockScroll(true);
+    } else {
+      lockScroll(false);
+    }
   }
 
   function submitTransfer() {
-    const amount = document.getElementById('amountInput').value || 0;
-    const recipient = document.getElementById('recipientInput').value || '—';
-    const commission = document.getElementById('commissionInput').value || 0;
+    const amount = document.getElementById('amountInput').value.trim();
+    const recipient = document.getElementById('recipientInput').value.trim();
+    const commission = document.getElementById('commissionInput').value.trim();
 
     if (!amount || Number(amount) <= 0) {
       alert('Введите сумму больше 0');
       return;
     }
-    if (!recipient.trim()) {
+    if (!recipient) {
       alert('Введите получателя');
       return;
     }
 
     document.getElementById('amountView').textContent = amount + ' ₽';
-    document.getElementById('commissionView').textContent = 'Комиссия ' + commission + ' ₽';
+    document.getElementById('commissionView').textContent =
+      'Комиссия ' + (commission === '' ? '0' : commission) + ' ₽';
     document.getElementById('recipientView').textContent = recipient;
 
     const checkPath = document.querySelector('.check path');
@@ -656,8 +741,15 @@
         if (e.target === bg) bg.classList.remove('show');
       });
     });
+
+    let lastTouch = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouch <= 300) e.preventDefault();
+      lastTouch = now;
+    }, { passive: false });
   });
 </script>
 
 </body>
-               </html>
+</html>
