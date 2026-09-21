@@ -11,9 +11,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: manipulation;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
   }
 
   body {
@@ -32,8 +31,6 @@
     padding: 16px;
     color: #fff;
     -webkit-font-smoothing: antialiased;
-    position: fixed;
-    inset: 0;
   }
 
   .screen {
@@ -57,9 +54,6 @@
   }
 
   #screenReceipt {
-    overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: none;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
@@ -456,8 +450,8 @@
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
-             </div>
-             <script>
+         </div>
+         <script>
   const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
@@ -482,32 +476,31 @@
   let isAdmin = false;
   let watermarkEnabled = true;
 
-  function lockScroll(lock) {
-    if (lock) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
-      document.body.style.top = '0';
-      document.body.style.left = '0';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
+  /* ===== Блокировка свайпов в стороны на чеке ===== */
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
     }
-  }
+  }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
-    if (document.getElementById('screenReceipt').classList.contains('active')) {
+    if (!document.getElementById('screenReceipt').classList.contains('active')) return;
+    if (e.touches.length !== 1) return;
+
+    const dx = Math.abs(e.touches[0].clientX - touchStartX);
+    const dy = Math.abs(e.touches[0].clientY - touchStartY);
+
+    /* Блокируем только явный горизонтальный свайп */
+    if (dx > dy && dx > 10) {
       e.preventDefault();
     }
   }, { passive: false });
 
+  /* Блокируем прокрутку колёсиком и стрелками на чеке */
   document.addEventListener('wheel', (e) => {
     if (document.getElementById('screenReceipt').classList.contains('active')) {
       e.preventDefault();
@@ -516,7 +509,7 @@
 
   document.addEventListener('keydown', (e) => {
     if (document.getElementById('screenReceipt').classList.contains('active')) {
-      const keys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End',' '];
+      const keys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End'];
       if (keys.includes(e.key)) e.preventDefault();
     }
   });
@@ -535,12 +528,7 @@
     document.querySelectorAll('.screen')
       .forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-
-    if (id === 'screenReceipt') {
-      lockScroll(true);
-    } else {
-      lockScroll(false);
-    }
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   function submitTransfer() {
@@ -743,6 +731,7 @@
       });
     });
 
+    /* Двойной тап не приближает */
     let lastTouch = 0;
     document.addEventListener('touchend', (e) => {
       const now = Date.now();
@@ -753,4 +742,4 @@
 </script>
 
 </body>
- </html>
+</html>
