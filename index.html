@@ -450,7 +450,7 @@
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
  </div>
-<script>
+ <script>
   const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
@@ -475,7 +475,7 @@
   let isAdmin = false;
   let watermarkEnabled = true;
 
-  /* ===== Разделение цифр пробелами ===== */
+  /* ===== Форматирование цифр ===== */
   function formatNumber(value) {
     const digits = String(value).replace(/\D/g, '');
     if (!digits) return '';
@@ -484,6 +484,13 @@
 
   function unformatNumber(value) {
     return String(value).replace(/\s/g, '');
+  }
+
+  /* ===== Вибрация ===== */
+  function vibrate(pattern) {
+    if (navigator.vibrate) {
+      try { navigator.vibrate(pattern); } catch (e) {}
+    }
   }
 
   /* ===== Блокировка горизонтальных свайпов ===== */
@@ -545,13 +552,18 @@
     const commissionRaw = unformatNumber(document.getElementById('commissionInput').value);
 
     if (!amountRaw || Number(amountRaw) <= 0) {
+      vibrate([30, 40, 30]);
       alert('Введите сумму больше 0');
       return;
     }
     if (!recipient) {
+      vibrate([30, 40, 30]);
       alert('Введите получателя');
       return;
     }
+
+    /* Двойная вибрация — успех */
+    vibrate([50, 60, 50, 60, 80]);
 
     document.getElementById('amountView').textContent =
       formatNumber(amountRaw) + ' ₽';
@@ -572,6 +584,7 @@
   }
 
   function randomRecipient() {
+    vibrate(20);
     const el = document.getElementById('recipientInput');
     let next, attempts = 0;
     do {
@@ -582,6 +595,7 @@
   }
 
   function openAdmin() {
+    vibrate(20);
     if (isAdmin) {
       document.getElementById('adminModal').classList.add('show');
       return;
@@ -602,11 +616,13 @@
     }
 
     if (val === ADMIN_PASSWORD) {
+      vibrate([40, 40, 60]);
       isAdmin = true;
       err.textContent = '';
       closeModal('loginModal');
       document.getElementById('adminModal').classList.add('show');
     } else {
+      vibrate([80, 40, 80]);
       err.textContent = 'Неверный пароль';
       document.getElementById('passInput').value = '';
       document.getElementById('passInput').focus();
@@ -618,6 +634,7 @@
   }
 
   function toggleWatermark() {
+    vibrate(20);
     watermarkEnabled = !watermarkEnabled;
     const sw = document.getElementById('wmSwitch');
     sw.classList.toggle('on', watermarkEnabled);
@@ -628,11 +645,13 @@
   }
 
   function logout() {
+    vibrate(20);
     isAdmin = false;
     closeModal('adminModal');
   }
 
   async function downloadPNG() {
+    vibrate(30);
     const node = document.getElementById('receipt');
     const rect = node.getBoundingClientRect();
     const scale = 3;
@@ -729,7 +748,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     initWatermark();
 
-    /* Автоформатирование при вводе */
+    /* Автоформатирование цифр при вводе */
     const amountInput = document.getElementById('amountInput');
     const commissionInput = document.getElementById('commissionInput');
 
@@ -766,4 +785,4 @@
 </script>
 
 </body>
- </html> 
+ </html>
