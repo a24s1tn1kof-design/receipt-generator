@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Генератор чеков</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #0a1f1a 0%, #050a08 60%, #000 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #fff;
+    gap: 16px;
+  }
+
+  .controls {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #111;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid #222;
+  }
+  .controls label { font-size: 13px; color: #888; }
+  .controls input {
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .controls input:focus { border-color: #4ade80; }
+  .controls button {
+    background: #4ade80;
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .controls button.secondary { background: #2a2a2a; color: #fff; }
+  .controls button.ghost {
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #2a2a2a;
+    font-size: 13px;
+    padding: 8px;
+    font-weight: 400;
+  }
+  .controls button:active { transform: scale(0.98); }
+  .controls button:hover { opacity: 0.9; }
+
+  .input-with-btn { display: flex; gap: 8px; }
+  .input-with-btn button {
+    padding: 0 14px;
+    background: #2a2a2a;
+    color: #fff;
+    font-size: 18px;
+    flex: 0 0 auto;
+  }
+
+  .receipt-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #0d0d0d;
+    padding: 32px 24px 24px;
+    text-align: center;
+    border: 1px solid #1a1a1a;
+    box-shadow: 0 0 60px rgba(74, 222, 128, 0.08);
+  }
+  .watermark {
+    position: absolute;
+    inset: -50%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-content: center;
+    gap: 40px 20px;
+    transform: rotate(-30deg);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.14;
+  }
+  .watermark.hidden { display: none; }
+  .watermark span {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #ff2d2d;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .receipt-content { position: relative; z-index: 2; }
+  .check { width: 110px; height: 110px; margin: 0 auto 20px; display: block; }
+  .check path {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: draw 0.8s ease forwards;
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .title { font-size: 22px; font-weight: 700; margin-bottom: 14px; }
+  .amount { font-size: 40px; font-weight: 800; margin-bottom: 10px; letter-spacing: -1px; }
+  .commission { font-size: 15px; color: #9ca3af; margin-bottom: 4px; }
+  .recipient {
+    font-size: 15px;
+    color: #6b7280;
+    margin-bottom: 24px;
+    word-break: break-word;
+  }
+  .row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .btn {
+    flex: 1;
+    background: #1f1f1f;
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: default;
+  }
+  .btn-main {
+    width: 100%;
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    cursor: default;
+  }
+  .hint { font-size: 11px; color: #4b5563; text-align: center; max-width: 360px; }
+
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal input {
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+  }
+  .modal input:focus { border-color: #4ade80; }
+  .modal button {
+    background: #4ade80;
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal button.cancel {
+    background: transparent;
+    color: #888;
+    font-weight: 400;
+  }
+  .modal .err { color: #ff5555; font-size: 13px; min-height: 16px; }
+  .modal .ok { color: #4ade80; font-size: 13px; min-height: 16px; }
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1c1c1c;
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .toggle-row span { font-size: 14px; }
+  .switch {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    background: #333;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .switch.on { background: #4ade80; }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .switch.on::after { left: 23px; }
+</style>
+</head>
+<body>
+
+  <div class="controls">
+    <label>Сумма (₽)</label>
+    <input id="amountInput" type="number" value="37" placeholder="37">
+
+    <label>Получатель</label>
+    <div class="input-with-btn">
+      <input id="recipientInput" type="text" value="Светлана Анатольевна З." placeholder="Имя">
+      <button onclick="randomRecipient()" title="Случайный получатель">🎲</button>
+    </div>
+
+    <label>Комиссия (₽)</label>
+    <input id="commissionInput" type="number" value="0" placeholder="0">
+
+    <button onclick="updateReceipt()">Обновить чек</button>
+    <button class="secondary" onclick="downloadPNG()">Скачать PNG</button>
+    <button class="ghost" onclick="openAdmin()">⚙ Админ-панель</button>
+  </div>
+
+  <div class="receipt-wrap" id="receipt">
+    <div class="watermark" id="watermark"></div>
+
+    <div class="receipt-content">
+      <svg class="check" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#a3e635"/>
+            <stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <path d="M20 52 L42 74 L82 28"
+              fill="none"
+              stroke="url(#grad)"
+              stroke-width="12"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+
+      <div class="title">Перевод доставлен</div>
+      <div class="amount" id="amountView">37 ₽</div>
+      <div class="commission" id="commissionView">Комиссия 0 ₽</div>
+      <div class="recipient" id="recipientView">Светлана Анатольевна З.</div>
+
+      <div class="row">
+        <button class="btn">📄 Чек</button>
+        <button class="btn">Автоперевод</button>
+      </div>
+      <button class="btn-main">На главный</button>
+    </div>
+  </div>
+
+  <div class="hint">Шуточный генератор. Не является банковским документом.</div>
+
+  <div class="modal-bg" id="loginModal">
+    <div class="modal">
+      <h3>Вход в админ-панель</h3>
+      <input id="passInput" type="password" placeholder="Пароль" autocomplete="off">
+      <div class="err" id="loginErr"></div>
+      <button onclick="tryLogin()">Войти</button>
+      <button class="cancel" onclick="closeModal('loginModal')">Отмена</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="adminModal">
+    <div class="modal">
+      <h3>Настройки</h3>
+      <div class="toggle-row">
+        <span>Вотермарка «ФЕЙК»</span>
+        <div class="switch on" id="wmSwitch" onclick="toggleWatermark()"></div>
+      </div>
+      <div class="ok" id="adminMsg"></div>
+      <button onclick="closeModal('adminModal')">Готово</button>
+      <button class="cancel" onclick="logout()">Выйти из админа</button>
+    </div>
+  </div>
+  <script>
+  /* ===== Защита пароля =====
+     Пароль хранится как SHA-256 хэш. Открытого пароля в коде нет.
+     Чтобы получить хэш от своего пароля, открой консоль (F12) и выполни:
+     crypto.subtle.digest('SHA-256', new TextEncoder().encode('ТВОЙ_ПАРОЛЬ'))
+       .then(b => console.log([...new Uint8Array(b)]
+         .map(x => x.toString(16).padStart(2,'0')).join('')));
+     Потом вставь результат в PASS_HASH ниже.
+  */
+  const PASS_HASH = "8e3a5c9b1f7d2e6a4c8b0f3d9e1a7c5b2f8d4e6a0c3b9f1d7e5a2c8b4f6d0e9a";
+
+  async function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return [...new Uint8Array(hash)]
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  const NAMES = [
+    "Светлана Анатольевна З.",
+    "Иван Петрович С.",
+    "Мария Ивановна К.",
+    "Дмитрий Александрович В.",
+    "Ольга Сергеевна М.",
+    "Артём Николаевич Р.",
+    "Екатерина Дмитриевна Л.",
+    "Алексей Владимирович Т.",
+    "Наталья Юрьевна Б.",
+    "Сергей Андреевич Ф.",
+    "Виктория Олеговна Ш.",
+    "Максим Игоревич П.",
+    "Анна Викторовна Г.",
+    "Павел Денисович Н.",
+    "Татьяна Юрьевна О."
+  ];
+
+  let isAdmin = false;
+  let watermarkEnabled = true;
+
+  function initWatermark() {
+    const wm = document.getElementById('watermark');
+    wm.innerHTML = '';
+    for (let i = 0; i < 40; i++) {
+      const s = document.createElement('span');
+      s.textContent = 'ФЕЙК';
+      wm.appendChild(s);
+    }
+  }
+
+  function updateReceipt() {
+    const amount = document.getElementById('amountInput').value || 0;
+    const recipient = document.getElementById('recipientInput').value || '—';
+    const commission = document.getElementById('commissionInput').value || 0;
+
+    document.getElementById('amountView').textContent = amount + ' ₽';
+    document.getElementById('commissionView').textContent = 'Комиссия ' + commission + ' ₽';
+    document.getElementById('recipientView').textContent = recipient;
+  }
+
+  function randomRecipient() {
+    const el = document.getElementById('recipientInput');
+    let next;
+    let attempts = 0;
+    do {
+      next = NAMES[Math.floor(Math.random() * NAMES.length)];
+      attempts++;
+    } while (next === el.value && NAMES.length > 1 && attempts < 20);
+    el.value = next;
+    updateReceipt();
+  }
+
+  function openAdmin() {
+    if (isAdmin) {
+      document.getElementById('adminModal').classList.add('show');
+      return;
+    }
+    document.getElementById('loginErr').textContent = '';
+    document.getElementById('passInput').value = '';
+    document.getElementById('loginModal').classList.add('show');
+    setTimeout(() => document.getElementById('passInput').focus(), 60);
+  }
+
+  async function tryLogin() {
+    const val = document.getElementById('passInput').value;
+    const err = document.getElementById('loginErr');
+
+    if (!val) {
+      err.textContent = 'Введите пароль';
+      return;
+    }
+
+    const h = await sha256(val);
+
+    if (h === PASS_HASH) {
+      isAdmin = true;
+      err.textContent = '';
+      closeModal('loginModal');
+      document.getElementById('adminModal').classList.add('show');
+    } else {
+      err.textContent = 'Неверный пароль';
+      document.getElementById('passInput').value = '';
+      document.getElementById('passInput').focus();
+    }
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  function toggleWatermark() {
+    watermarkEnabled = !watermarkEnabled;
+    const sw = document.getElementById('wmSwitch');
+    sw.classList.toggle('on', watermarkEnabled);
+    document.getElementById('watermark')
+      .classList.toggle('hidden', !watermarkEnabled);
+
+    document.getElementById('adminMsg').textContent =
+      watermarkEnabled ? 'Вотермарка включена' : 'Вотермарка выключена';
+  }
+
+  function logout() {
+    isAdmin = false;
+    closeModal('adminModal');
+  }
+
+  async function downloadPNG() {
+    const node = document.getElementById('receipt');
+    const rect = node.getBoundingClientRect();
+    const scale = 2;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = rect.width * scale;
+    canvas.height = rect.height * scale;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = '#0d0d0d';
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    if (watermarkEnabled) {
+      ctx.save();
+      ctx.translate(rect.width / 2, rect.height / 2);
+      ctx.rotate(-30 * Math.PI / 180);
+      ctx.globalAlpha = 0.14;
+      ctx.fillStyle = '#ff2d2d';
+      ctx.font = '900 22px sans-serif';
+      ctx.textAlign = 'center';
+
+      for (let y = -rect.height; y < rect.height; y += 60) {
+        for (let x = -rect.width; x < rect.width; x += 120) {
+          ctx.fillText('ФЕЙК', x, y);
+        }
+      }
+      ctx.restore();
+    }
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const cx = rect.width / 2;
+    const cy = 80;
+
+    ctx.beginPath();
+    ctx.moveTo(cx - 30, cy);
+    ctx.lineTo(cx - 5, cy + 25);
+    ctx.lineTo(cx + 35, cy - 25);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+
+    ctx.font = '700 22px sans-serif';
+    ctx.fillText('Перевод доставлен', cx, 170);
+
+    ctx.font = '800 40px sans-serif';
+    ctx.fillText(
+      document.getElementById('amountView').textContent,
+      cx, 220
+    );
+
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '15px sans-serif';
+    ctx.fillText(
+      document.getElementById('commissionView').textContent,
+      cx, 250
+    );
+
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(
+      document.getElementById('recipientView').textContent,
+      cx, 275
+    );
+
+    const link = document.createElement('a');
+    link.download = 'receipt.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initWatermark();
+    updateReceipt();
+
+    ['amountInput', 'recipientInput', 'commissionInput'].forEach(id => {
+      document.getElementById(id)
+        .addEventListener('input', updateReceipt);
+    });
+
+    document.getElementById('passInput')
+      .addEventListener('keydown', e => {
+        if (e.key === 'Enter') tryLogin();
+      });
+
+    document.querySelectorAll('.modal-bg').forEach(bg => {
+      bg.addEventListener('click', e => {
+        if (e.target === bg) bg.classList.remove('show');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
