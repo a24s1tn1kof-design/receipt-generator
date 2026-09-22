@@ -189,7 +189,6 @@
     border: 1px solid #262626;
   }
 
-  /* ===== Экран списка переводов ===== */
   #screenCancelList {
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -380,14 +379,20 @@
     margin-bottom: 10px;
     letter-spacing: -1.2px;
     color: #fff;
-    line-height: 1;
+    line-height: 1.15;
     text-align: center;
     width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
   .amount.cancelled {
     color: #ff3b30;
     text-decoration: line-through;
     text-decoration-thickness: 3px;
+  }
+  .amount.custom-text {
+    font-size: 30px;
+    letter-spacing: -0.5px;
   }
 
   .commission {
@@ -508,6 +513,11 @@
     background: transparent;
     color: #888;
     font-weight: 400;
+  }
+  .modal button.secondary-btn {
+    background: #2a2a2a;
+    color: #fff;
+    font-weight: 500;
   }
   .modal .err { color: #ff5555; font-size: 13px; min-height: 16px; }
   .modal .ok { color: #21a038; font-size: 13px; min-height: 16px; }
@@ -669,8 +679,21 @@
         <div class="switch on" id="wmSwitch" onclick="toggleWatermark()"></div>
       </div>
       <div class="ok" id="adminMsg"></div>
+      <button class="secondary-btn" onclick="openCustomReceipt()">Выдать чек вручную</button>
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="customModal">
+    <div class="modal">
+      <h3>Чек вручную</h3>
+      <input id="customAmountInput" type="text" placeholder="Текст вместо суммы">
+      <input id="customRecipientInput" type="text" placeholder="Получатель">
+      <input id="customCommissionInput" type="text" placeholder="Комиссия (необязательно)">
+      <div class="err" id="customErr"></div>
+      <button onclick="showCustomReceipt()">Показать чек</button>
+      <button class="cancel" onclick="closeModal('customModal')">Отмена</button>
     </div>
   </div>
 
@@ -784,18 +807,25 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
-  /* ===== Показ чека ===== */
-  function showReceipt(data, cancelled) {
-    document.getElementById('amountView').textContent =
-      formatNumber(data.amount) + ' ₽';
+  function showReceipt(data, cancelled, isCustom) {
+    const amountEl = document.getElementById('amountView');
+    const title = document.getElementById('receiptTitle');
+    const checkIcon = document.getElementById('checkIcon');
+    const row = document.getElementById('receiptRow');
+
+    amountEl.classList.remove('cancelled', 'custom-text');
+    title.classList.remove('cancelled');
+
+    if (isCustom && !cancelled) {
+      amountEl.textContent = data.amount;
+      amountEl.classList.add('custom-text');
+    } else {
+      amountEl.textContent = formatNumber(data.amount) + ' ₽';
+    }
+
     document.getElementById('commissionView').textContent =
       'Комиссия ' + (data.commission === '' ? '0' : formatNumber(data.commission)) + ' ₽';
     document.getElementById('recipientView').textContent = data.recipient;
-
-    const title = document.getElementById('receiptTitle');
-    const amountEl = document.getElementById('amountView');
-    const checkIcon = document.getElementById('checkIcon');
-    const row = document.getElementById('receiptRow');
 
     if (cancelled) {
       title.textContent = 'Перевод отменён';
@@ -817,8 +847,6 @@
               stroke-linejoin="round"/>`;
     } else {
       title.textContent = 'Перевод доставлен';
-      title.classList.remove('cancelled');
-      amountEl.classList.remove('cancelled');
       row.style.display = 'flex';
       checkIcon.innerHTML = `
         <defs>
@@ -845,7 +873,6 @@
     showScreen('screenReceipt');
   }
 
-  /* ===== Перевести ===== */
   function submitTransfer() {
     const amountRaw = unformatNumber(document.getElementById('amountInput').value);
     const recipient = document.getElementById('recipientInput').value.trim();
@@ -881,11 +908,10 @@
       });
 
       vibrate([50, 60, 50, 60, 80]);
-      showReceipt(data, false);
+      showReceipt(data, false, false);
     }, 1500);
   }
 
-  /* ===== Список для отмены ===== */
   function openCancelList() {
     vibrate(20);
     selectedTransferIndex = null;
@@ -953,7 +979,7 @@
         amount: t.amount,
         recipient: t.recipient,
         commission: t.commission
-      }, true);
+      }, true, false);
       selectedTransferIndex = null;
     }, 1500);
   }
@@ -1023,6 +1049,44 @@
       watermarkEnabled ? 'Вотермарка включена' : 'Вотермарка выключена';
   }
 
+  /* ===== Чек вручную ===== */
+  function openCustomReceipt() {
+    vibrate(20);
+    document.getElementById('customAmountInput').value = '';
+    document.getElementById('customRecipientInput').value = '';
+    document.getElementById('customCommissionInput').value = '';
+    document.getElementById('customErr').textContent = '';
+    closeModal('adminModal');
+    document.getElementById('customModal').classList.add('show');
+    setTimeout(() => document.getElementById('customAmountInput').focus(), 60);
+  }
+
+  function showCustomReceipt() {
+    const amountText = document.getElementById('customAmountInput').value.trim();
+    const recipient = document.getElementById('customRecipientInput').value.trim();
+    const commissionRaw = unformatNumber(document.getElementById('customCommissionInput').value);
+    const err = document.getElementById('customErr');
+
+    if (!amountText) {
+      err.textContent = 'Введите текст вместо суммы';
+      return;
+    }
+    if (!recipient) {
+      err.textContent = 'Введите получателя';
+      return;
+    }
+
+    err.textContent = '';
+    vibrate([50, 60, 50, 60, 80]);
+    closeModal('customModal');
+
+    showReceipt({
+      amount: amountText,
+      recipient: recipient,
+      commission: commissionRaw === '' ? '0' : commissionRaw
+    }, false, true);
+  }
+
   function logout() {
     vibrate(20);
     isAdmin = false;
@@ -1061,14 +1125,24 @@
       ctx.restore();
     }
 
-    const grad = ctx.createLinearGradient(0, 0, rect.width, rect.height);
-    grad.addColorStop(0,    '#d4f24a');
-    grad.addColorStop(0.35, '#7ee34a');
-    grad.addColorStop(0.65, '#22c55e');
-    grad.addColorStop(1,    '#22d3ee');
+    const isCancelled = document.getElementById('receiptTitle').classList.contains('cancelled');
+    const isCustom = document.getElementById('amountView').classList.contains('custom-text');
 
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 20;
+    if (isCancelled) {
+      const gradRed = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+      gradRed.addColorStop(0, '#ff6b5b');
+      gradRed.addColorStop(1, '#ff3b30');
+      ctx.strokeStyle = gradRed;
+    } else {
+      const grad = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+      grad.addColorStop(0,    '#d4f24a');
+      grad.addColorStop(0.35, '#7ee34a');
+      grad.addColorStop(0.65, '#22c55e');
+      grad.addColorStop(1,    '#22d3ee');
+      ctx.strokeStyle = grad;
+    }
+
+    ctx.lineWidth = isCancelled ? 18 : 20;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -1077,18 +1151,41 @@
     const s = 92 / 100;
 
     ctx.beginPath();
-    ctx.moveTo(cx + (20 - 50) * s, cy + (50 - 50) * s);
-    ctx.lineTo(cx + (40 - 50) * s, cy + (72 - 50) * s);
-    ctx.lineTo(cx + (82 - 50) * s, cy + (22 - 50) * s);
+    if (isCancelled) {
+      ctx.moveTo(cx + (30 - 50) * s, cy + (30 - 50) * s);
+      ctx.lineTo(cx + (70 - 50) * s, cy + (70 - 50) * s);
+      ctx.moveTo(cx + (70 - 50) * s, cy + (30 - 50) * s);
+      ctx.lineTo(cx + (30 - 50) * s, cy + (70 - 50) * s);
+    } else {
+      ctx.moveTo(cx + (20 - 50) * s, cy + (50 - 50) * s);
+      ctx.lineTo(cx + (40 - 50) * s, cy + (72 - 50) * s);
+      ctx.lineTo(cx + (82 - 50) * s, cy + (22 - 50) * s);
+    }
     ctx.stroke();
 
-    ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
 
-    ctx.font = '700 22px Onest, sans-serif';
-    ctx.fillText('Перевод доставлен', cx, cy + 82);
+    if (isCancelled) {
+      ctx.fillStyle = '#ff3b30';
+      ctx.font = '700 22px Onest, sans-serif';
+      ctx.fillText('Перевод отменён', cx, cy + 82);
+    } else {
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 22px Onest, sans-serif';
+      ctx.fillText('Перевод доставлен', cx, cy + 82);
+    }
 
-    ctx.font = '800 42px Onest, sans-serif';
+    if (isCancelled) {
+      ctx.fillStyle = '#ff3b30';
+    } else {
+      ctx.fillStyle = '#fff';
+    }
+
+    if (isCustom) {
+      ctx.font = '800 30px Onest, sans-serif';
+    } else {
+      ctx.font = '800 42px Onest, sans-serif';
+    }
     ctx.fillText(
       document.getElementById('amountView').textContent,
       cx, cy + 134
