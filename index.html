@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Перевод доставлен</title>
+<title>Мой банк</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -65,6 +65,7 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     width: 100%;
+    padding: 20px 0;
   }
 
   #screenReceipt, #screenLoading, #screenCancelList {
@@ -95,9 +96,180 @@
     letter-spacing: -0.2px;
   }
 
+  /* ===== Обёртка главной ===== */
+  .main-wrap {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ===== Карта ===== */
+  .bank-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.586;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(46, 204, 113, 0.55) 0%, transparent 55%),
+      radial-gradient(circle at 85% 95%, rgba(34, 211, 238, 0.35) 0%, transparent 60%),
+      linear-gradient(135deg, #0e2b1d 0%, #08221a 45%, #051410 100%);
+    padding: 20px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.55),
+      0 0 60px rgba(33, 160, 56, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .bank-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg,
+      rgba(255, 255, 255, 0.10) 0%,
+      rgba(255, 255, 255, 0.02) 25%,
+      transparent 45%);
+    pointer-events: none;
+  }
+  .bank-card .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+  }
+  .bank-card .bank-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .bank-card .chip {
+    width: 38px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #e8d27a 0%, #c1a44a 50%, #f3e19b 100%);
+    position: relative;
+  }
+  .bank-card .chip::before,
+  .bank-card .chip::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 0, 0, 0.15);
+  }
+  .bank-card .chip::before {
+    top: 8px; left: 0; right: 0; height: 1px;
+  }
+  .bank-card .chip::after {
+    bottom: 8px; left: 0; right: 0; height: 1px;
+  }
+  .bank-card .balance-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .bank-card .balance {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    position: relative;
+    z-index: 2;
+  }
+  .bank-card .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+    z-index: 2;
+  }
+  .bank-card .card-number {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+  }
+  .bank-card .card-holder {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .bank-card .mir-logo {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* ===== Кликер ===== */
+  .clicker-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0 6px;
+    position: relative;
+  }
+  .clicker-coin {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.08s ease;
+    filter: drop-shadow(0 0 24px rgba(255, 200, 60, 0.35));
+    -webkit-tap-highlight-color: transparent;
+  }
+  .clicker-coin:active {
+    transform: scale(0.92);
+  }
+  .clicker-coin svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .clicker-hint {
+    font-size: 12px;
+    color: #6b6b6b;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .plus-popup {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: 800;
+    color: #4ade80;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;
+  }
+  .plus-popup.animate {
+    animation: plusFly 0.9s ease-out forwards;
+  }
+  @keyframes plusFly {
+    0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -60px) scale(1.15); }
+  }
+
+  /* ===== Управление ===== */
   .controls {
     width: 100%;
-    max-width: 300px;
+    max-width: 320px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -105,7 +277,6 @@
     padding: 20px;
     border-radius: 22px;
     border: 1px solid #1c1c1c;
-    margin: auto 0;
   }
   .controls h2 {
     font-size: 20px;
@@ -189,6 +360,7 @@
     border: 1px solid #262626;
   }
 
+  /* ===== Список отмены ===== */
   #screenCancelList {
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -209,7 +381,7 @@
     letter-spacing: -0.3px;
     margin-bottom: 4px;
   }
-  .transfers-list {
+   .transfers-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -306,6 +478,7 @@
   }
   .cancel-actions button:active:not(:disabled) { transform: scale(0.98); }
 
+  /* ===== Чек ===== */
   .receipt-wrap {
     position: relative;
     width: 100%;
@@ -460,6 +633,7 @@
   }
   .btn-main:active { transform: scale(0.98); opacity: 0.9; }
 
+  /* ===== Модалки ===== */
   .modal-bg {
     position: fixed;
     inset: 0;
@@ -580,24 +754,79 @@
 <body>
 
   <div class="screen active" id="screenForm">
-    <div class="controls">
-      <h2>Новый перевод</h2>
+    <div class="main-wrap">
 
-      <label>Сумма (₽)</label>
-      <input id="amountInput" type="text" inputmode="numeric" placeholder="Введите сумму">
+      <div class="bank-card">
+        <div class="top-row">
+          <div class="bank-name">CbeрБанк</div>
+          <div class="chip"></div>
+        </div>
 
-      <label>Получатель</label>
-      <div class="input-with-btn">
-        <input id="recipientInput" type="text" placeholder="Введите имя">
-        <button onclick="randomRecipient()" title="Случайный получатель">🎲</button>
+        <div>
+          <div class="balance-label">Доступно</div>
+          <div class="balance" id="cardBalance">0 ₽</div>
+        </div>
+
+        <div class="card-footer">
+          <div>
+            <div class="card-number">**** 4571</div>
+            <div class="card-holder">ARSENIY K.</div>
+          </div>
+          <div class="mir-logo">МИР</div>
+        </div>
       </div>
 
-      <label>Комиссия (₽)</label>
-      <input id="commissionInput" type="text" inputmode="numeric" placeholder="Введите комиссию">
+      <div class="clicker-zone" id="clickerZone">
+        <div class="plus-popup" id="plusPopup">+1 000</div>
+        <button class="clicker-coin" onclick="tapCoin()" id="coinBtn" title="Тапнуть">
+          <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="coinFace" cx="0.35" cy="0.30" r="0.85">
+                <stop offset="0%"  stop-color="#ffe37a"/>
+                <stop offset="45%" stop-color="#f5c842"/>
+                <stop offset="100%" stop-color="#b8860b"/>
+              </radialGradient>
+              <radialGradient id="coinRim" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0%"   stop-color="#f0d060"/>
+                <stop offset="80%"  stop-color="#a9741e"/>
+                <stop offset="100%" stop-color="#7a5312"/>
+              </radialGradient>
+              <linearGradient id="coinShine" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="rgba(255,255,255,0.55)"/>
+                <stop offset="45%"  stop-color="rgba(255,255,255,0.05)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0.35)"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="58" fill="url(#coinRim)"/>
+            <circle cx="60" cy="60" r="50" fill="url(#coinFace)"/>
+            <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(122,83,18,0.55)" stroke-width="1.5" stroke-dasharray="3 4"/>
+            <circle cx="60" cy="60" r="50" fill="url(#coinShine)"/>
+            <text x="60" y="80" text-anchor="middle" font-family="Onest, sans-serif" font-size="52" font-weight="900" fill="#7a5312">₽</text>
+          </svg>
+        </button>
+        <div class="clicker-hint">Тапни по монете — получишь 1 000 ₽</div>
+      </div>
 
-      <button onclick="submitTransfer()">Перевести</button>
-      <button class="cancel-btn" onclick="openCancelList()">Отменить перевод</button>
-      <button class="admin-link" onclick="openAdmin()">⚙ Админ-панель</button>
+      <div class="controls">
+        <h2>Новый перевод</h2>
+
+        <label>Сумма (₽)</label>
+        <input id="amountInput" type="text" inputmode="numeric" placeholder="Введите сумму">
+
+        <label>Получатель</label>
+        <div class="input-with-btn">
+          <input id="recipientInput" type="text" placeholder="Введите имя">
+          <button onclick="randomRecipient()" title="Случайный получатель">🎲</button>
+        </div>
+
+        <label>Комиссия (₽)</label>
+        <input id="commissionInput" type="text" inputmode="numeric" placeholder="Введите комиссию">
+
+        <button onclick="submitTransfer()">Перевести</button>
+        <button class="cancel-btn" onclick="openCancelList()">Отменить перевод</button>
+        <button class="admin-link" onclick="openAdmin()">⚙ Админ-панель</button>
+      </div>
+
     </div>
   </div>
 
@@ -680,6 +909,8 @@
       </div>
       <div class="ok" id="adminMsg"></div>
       <button class="secondary-btn" onclick="openCustomReceipt()">Выдать чек вручную</button>
+      <button class="secondary-btn" onclick="openGiveMoney()">Выдать деньги</button>
+      <button class="secondary-btn" onclick="resetBalance()">Обнулить баланс</button>
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
@@ -697,15 +928,27 @@
     </div>
   </div>
 
+  <div class="modal-bg" id="giveMoneyModal">
+    <div class="modal">
+      <h3>Выдать деньги</h3>
+      <input id="giveMoneyInput" type="text" inputmode="numeric" placeholder="Сумма (₽)">
+      <div class="err" id="giveMoneyErr"></div>
+      <button onclick="doGiveMoney()">Выдать</button>
+      <button class="cancel" onclick="closeModal('giveMoneyModal')">Отмена</button>
+    </div>
+  </div>
+
   <div class="modal-bg" id="alertModal">
     <div class="modal alert-modal">
       <div class="alert-icon">⚠️</div>
       <div class="alert-text" id="alertText">Введите сумму больше 0</div>
       <button onclick="closeModal('alertModal')">OK</button>
     </div>
- </div>
- <script>
+  </div>
+  <script>
   const ADMIN_PASSWORD = "Arseniy3412";
+  const STORAGE_KEY = "bank_balance_v1";
+  const STORAGE_TRANSFERS = "bank_transfers_v1";
 
   const NAMES = [
     "Светлана Анатольевна З.",
@@ -730,7 +973,9 @@
   let watermarkEnabled = true;
   let transfers = [];
   let selectedTransferIndex = null;
+  let balance = 0;
 
+  /* ===== Числа ===== */
   function formatNumber(value) {
     const digits = String(value).replace(/\D/g, '');
     if (!digits) return '';
@@ -741,6 +986,33 @@
     return String(value).replace(/\s/g, '');
   }
 
+  /* ===== Хранилище ===== */
+  function loadState() {
+    try {
+      const b = localStorage.getItem(STORAGE_KEY);
+      if (b !== null) balance = Number(b) || 0;
+
+      const t = localStorage.getItem(STORAGE_TRANSFERS);
+      if (t) transfers = JSON.parse(t) || [];
+    } catch (e) {
+      balance = 0;
+      transfers = [];
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(balance));
+      localStorage.setItem(STORAGE_TRANSFERS, JSON.stringify(transfers));
+    } catch (e) {}
+  }
+
+  function updateCardBalance() {
+    document.getElementById('cardBalance').textContent =
+      formatNumber(balance) + ' ₽';
+  }
+
+  /* ===== Вибрация и модалка ===== */
   function vibrate(pattern) {
     if (navigator.vibrate) {
       try { navigator.vibrate(pattern); } catch (e) {}
@@ -752,6 +1024,7 @@
     document.getElementById('alertModal').classList.add('show');
   }
 
+  /* ===== Блокировки скролла на чеке ===== */
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -807,6 +1080,29 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
+  /* ===== Кликер ===== */
+  function tapCoin() {
+    balance += 1000;
+    saveState();
+    updateCardBalance();
+    vibrate(15);
+
+    /* Плюс-попап над монетой */
+    const popup = document.getElementById('plusPopup');
+    popup.classList.remove('animate');
+    void popup.offsetWidth;
+    popup.classList.add('animate');
+
+    /* Пульс карты */
+    const card = document.querySelector('.bank-card');
+    card.style.transition = 'transform 0.12s ease';
+    card.style.transform = 'scale(1.015)';
+    setTimeout(() => {
+      card.style.transform = 'scale(1)';
+    }, 120);
+  }
+
+  /* ===== Чек ===== */
   function showReceipt(data, cancelled, isCustom) {
     const amountEl = document.getElementById('amountView');
     const title = document.getElementById('receiptTitle');
@@ -873,6 +1169,7 @@
     showScreen('screenReceipt');
   }
 
+  /* ===== Перевод ===== */
   function submitTransfer() {
     const amountRaw = unformatNumber(document.getElementById('amountInput').value);
     const recipient = document.getElementById('recipientInput').value.trim();
@@ -888,12 +1185,22 @@
       showAlert('Введите получателя');
       return;
     }
+    if (Number(amountRaw) > balance) {
+      vibrate([30, 40, 30]);
+      showAlert('Недостаточно средств на карте');
+      return;
+    }
 
     vibrate(20);
     document.getElementById('loadingText').textContent = 'Отправляем перевод...';
     showScreen('screenLoading');
 
     setTimeout(() => {
+      /* Списываем деньги */
+      balance -= Number(amountRaw);
+      saveState();
+      updateCardBalance();
+
       const data = {
         amount: amountRaw,
         recipient: recipient,
@@ -906,12 +1213,14 @@
         commission: commissionRaw,
         cancelled: false
       });
+      saveState();
 
       vibrate([50, 60, 50, 60, 80]);
       showReceipt(data, false, false);
     }, 1500);
   }
 
+  /* ===== Отмена ===== */
   function openCancelList() {
     vibrate(20);
     selectedTransferIndex = null;
@@ -974,6 +1283,12 @@
 
     setTimeout(() => {
       t.cancelled = true;
+
+      /* Возвращаем деньги обратно */
+      balance += Number(t.amount);
+      saveState();
+      updateCardBalance();
+
       vibrate([80, 40, 80]);
       showReceipt({
         amount: t.amount,
@@ -999,6 +1314,7 @@
     el.value = next;
   }
 
+  /* ===== Админка ===== */
   function openAdmin() {
     vibrate(20);
     if (isAdmin) {
@@ -1087,12 +1403,49 @@
     }, false, true);
   }
 
+  /* ===== Выдать деньги ===== */
+  function openGiveMoney() {
+    vibrate(20);
+    document.getElementById('giveMoneyInput').value = '';
+    document.getElementById('giveMoneyErr').textContent = '';
+    closeModal('adminModal');
+    document.getElementById('giveMoneyModal').classList.add('show');
+    setTimeout(() => document.getElementById('giveMoneyInput').focus(), 60);
+  }
+
+  function doGiveMoney() {
+    const raw = unformatNumber(document.getElementById('giveMoneyInput').value);
+    const err = document.getElementById('giveMoneyErr');
+
+    if (!raw || Number(raw) <= 0) {
+      err.textContent = 'Введите сумму больше 0';
+      return;
+    }
+
+    err.textContent = '';
+    balance += Number(raw);
+    saveState();
+    updateCardBalance();
+    vibrate([40, 40, 60]);
+    closeModal('giveMoneyModal');
+  }
+
+  /* ===== Обнулить баланс ===== */
+  function resetBalance() {
+    vibrate([60, 40, 60]);
+    balance = 0;
+    saveState();
+    updateCardBalance();
+    document.getElementById('adminMsg').textContent = 'Баланс обнулён';
+  }
+
   function logout() {
     vibrate(20);
     isAdmin = false;
     closeModal('adminModal');
   }
 
+  /* ===== Скачать PNG ===== */
   async function downloadPNG() {
     vibrate(30);
     const node = document.getElementById('receipt');
@@ -1175,17 +1528,8 @@
       ctx.fillText('Перевод доставлен', cx, cy + 82);
     }
 
-    if (isCancelled) {
-      ctx.fillStyle = '#ff3b30';
-    } else {
-      ctx.fillStyle = '#fff';
-    }
-
-    if (isCustom) {
-      ctx.font = '800 30px Onest, sans-serif';
-    } else {
-      ctx.font = '800 42px Onest, sans-serif';
-    }
+    ctx.fillStyle = isCancelled ? '#ff3b30' : '#fff';
+    ctx.font = isCustom ? '800 30px Onest, sans-serif' : '800 42px Onest, sans-serif';
     ctx.fillText(
       document.getElementById('amountView').textContent,
       cx, cy + 134
@@ -1210,8 +1554,11 @@
     link.click();
   }
 
+  /* ===== Инициализация ===== */
   document.addEventListener('DOMContentLoaded', () => {
     initWatermark();
+    loadState();
+    updateCardBalance();
 
     const amountInput = document.getElementById('amountInput');
     const commissionInput = document.getElementById('commissionInput');
