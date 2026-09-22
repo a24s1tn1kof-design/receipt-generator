@@ -96,7 +96,6 @@
     letter-spacing: -0.2px;
   }
 
-  /* ===== Общая обёртка ===== */
   .main-wrap {
     width: 100%;
     max-width: 320px;
@@ -227,9 +226,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.08s ease;
+    transition: transform 0.05s ease;
     filter: drop-shadow(0 0 24px rgba(255, 200, 60, 0.35));
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   .clicker-coin:active {
     transform: scale(0.92);
@@ -266,7 +266,6 @@
     100% { opacity: 0; transform: translate(-50%, -60px) scale(1.15); }
   }
 
-  /* ===== Кнопки на главной ===== */
   .home-actions {
     display: flex;
     flex-direction: column;
@@ -307,8 +306,7 @@
     font-family: inherit;
   }
   .home-actions button:active { transform: scale(0.98); }
-
-  /* ===== Форма перевода ===== */
+   /* ===== Форма перевода ===== */
   .controls {
     width: 100%;
     max-width: 320px;
@@ -369,6 +367,16 @@
     margin-top: 0;
     font-size: 14px;
   }
+  .controls button.admin-link {
+    background: transparent;
+    color: #ff3b30;
+    border: none;
+    font-size: 13px;
+    padding: 10px;
+    font-weight: 500;
+    margin-top: 0;
+    text-align: center;
+  }
   .controls button:active { transform: scale(0.98); }
 
   .input-with-btn { display: flex; gap: 8px; }
@@ -382,7 +390,8 @@
     border-radius: 12px;
     border: 1px solid #262626;
   }
-   /* ===== Список отмены ===== */
+
+  /* ===== Список отмены ===== */
   .cancel-panel {
     width: 100%;
     max-width: 340px;
@@ -769,7 +778,7 @@
 </head>
 <body>
 
-  <!-- ===== ЭКРАН 1: ГЛАВНАЯ (карта + кликер + кнопки) ===== -->
+  <!-- ===== ЭКРАН 1: ГЛАВНАЯ ===== -->
   <div class="screen active" id="screenHome">
     <div class="main-wrap">
 
@@ -849,7 +858,8 @@
       <input id="commissionInput" type="text" inputmode="numeric" placeholder="Введите комиссию">
 
       <button onclick="submitTransfer()">Отправить</button>
-      <button class="back" onclick="backToHome()">Назад</button>
+      <button class="back" onclick="backToHome()">На главный</button>
+      <button class="admin-link" onclick="openAdmin()">⚙ Админ-панель</button>
     </div>
   </div>
 
@@ -909,7 +919,7 @@
             </svg>
             Чек
           </button>
-          <button class="btn" onclick="backToHome()">Автоперевод</button>
+          <button class="btn" onclick="openTransferForm()">Автоперевод</button>
         </div>
         <button class="btn-main" onclick="backToHome()">На главный</button>
       </div>
@@ -972,7 +982,7 @@
       <button onclick="closeModal('alertModal')">OK</button>
     </div>
   </div>
-  <script>
+ <script>
   const ADMIN_PASSWORD = "Arseniy3412";
   const STORAGE_KEY = "bank_balance_v1";
   const STORAGE_TRANSFERS = "bank_transfers_v1";
@@ -1098,6 +1108,7 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
+  /* ===== Навигация ===== */
   function openTransferForm() {
     vibrate(20);
     showScreen('screenForm');
@@ -1109,11 +1120,12 @@
     updateCardBalance();
   }
 
+  /* ===== Кликер ===== */
   function tapCoin() {
     balance += 1000;
     saveState();
     updateCardBalance();
-    vibrate(15);
+    vibrate(10);
 
     const popup = document.getElementById('plusPopup');
     popup.classList.remove('animate');
@@ -1121,11 +1133,11 @@
     popup.classList.add('animate');
 
     const card = document.querySelector('.bank-card');
-    card.style.transition = 'transform 0.12s ease';
     card.style.transform = 'scale(1.015)';
-    setTimeout(() => { card.style.transform = 'scale(1)'; }, 120);
+    setTimeout(() => { card.style.transform = 'scale(1)'; }, 60);
   }
 
+  /* ===== Чек ===== */
   function showReceipt(data, cancelled, isCustom) {
     const amountEl = document.getElementById('amountView');
     const title = document.getElementById('receiptTitle');
@@ -1192,6 +1204,7 @@
     showScreen('screenReceipt');
   }
 
+  /* ===== Перевод ===== */
   function submitTransfer() {
     const amountRaw = unformatNumber(document.getElementById('amountInput').value);
     const recipient = document.getElementById('recipientInput').value.trim();
@@ -1213,34 +1226,27 @@
       return;
     }
 
-    vibrate(20);
-    document.getElementById('loadingText').textContent = 'Отправляем перевод...';
-    showScreen('screenLoading');
+    balance -= Number(amountRaw);
+    saveState();
+    updateCardBalance();
 
-    setTimeout(() => {
-      balance -= Number(amountRaw);
-      saveState();
-      updateCardBalance();
+    transfers.push({
+      amount: amountRaw,
+      recipient: recipient,
+      commission: commissionRaw,
+      cancelled: false
+    });
+    saveState();
 
-      const data = {
-        amount: amountRaw,
-        recipient: recipient,
-        commission: commissionRaw
-      };
-
-      transfers.push({
-        amount: amountRaw,
-        recipient: recipient,
-        commission: commissionRaw,
-        cancelled: false
-      });
-      saveState();
-
-      vibrate([50, 60, 50, 60, 80]);
-      showReceipt(data, false, false);
-    }, 1500);
+    vibrate([50, 60, 50, 60, 80]);
+    showReceipt({
+      amount: amountRaw,
+      recipient: recipient,
+      commission: commissionRaw
+    }, false, false);
   }
 
+  /* ===== Список отмены ===== */
   function openCancelList() {
     vibrate(20);
     selectedTransferIndex = null;
@@ -1297,27 +1303,21 @@
     if (selectedTransferIndex === null) return;
     const t = transfers[selectedTransferIndex];
 
-    vibrate(30);
-    document.getElementById('loadingText').textContent = 'Отменяем операцию...';
-    showScreen('screenLoading');
+    t.cancelled = true;
+    balance += Number(t.amount);
+    saveState();
+    updateCardBalance();
 
-    setTimeout(() => {
-      t.cancelled = true;
-
-      balance += Number(t.amount);
-      saveState();
-      updateCardBalance();
-
-      vibrate([80, 40, 80]);
-      showReceipt({
-        amount: t.amount,
-        recipient: t.recipient,
-        commission: t.commission
-      }, true, false);
-      selectedTransferIndex = null;
-    }, 1500);
+    vibrate([80, 40, 80]);
+    showReceipt({
+      amount: t.amount,
+      recipient: t.recipient,
+      commission: t.commission
+    }, true, false);
+    selectedTransferIndex = null;
   }
 
+  /* ===== Утилиты ===== */
   function randomRecipient() {
     vibrate(20);
     const el = document.getElementById('recipientInput');
@@ -1446,6 +1446,7 @@
     closeModal('adminModal');
   }
 
+  /* ===== Скачать PNG ===== */
   async function downloadPNG() {
     vibrate(30);
     const node = document.getElementById('receipt');
@@ -1545,6 +1546,7 @@
     link.click();
   }
 
+  /* ===== Инициализация ===== */
   document.addEventListener('DOMContentLoaded', () => {
     initWatermark();
     loadState();
@@ -1576,8 +1578,10 @@
       });
     });
 
+    /* Блокировка двойного тапа — только на экране чека */
     let lastTouch = 0;
     document.addEventListener('touchend', (e) => {
+      if (!document.getElementById('screenReceipt').classList.contains('active')) return;
       const now = Date.now();
       if (now - lastTouch <= 300) e.preventDefault();
       lastTouch = now;
