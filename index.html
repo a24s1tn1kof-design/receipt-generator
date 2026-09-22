@@ -359,6 +359,27 @@
     transition: 0.2s;
   }
   .switch.on::after { left: 23px; }
+
+  .alert-modal {
+    text-align: center;
+    align-items: center;
+    gap: 14px;
+  }
+  .alert-icon {
+    font-size: 42px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .alert-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.4;
+  }
+  .alert-modal button {
+    width: 100%;
+    margin-top: 6px;
+  }
 </style>
 </head>
 <body>
@@ -449,8 +470,16 @@
       <button onclick="closeModal('adminModal')">Готово</button>
       <button class="cancel" onclick="logout()">Выйти из админа</button>
     </div>
- </div>
- <script>
+  </div>
+
+  <div class="modal-bg" id="alertModal">
+    <div class="modal alert-modal">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text" id="alertText">Введите сумму больше 0</div>
+      <button onclick="closeModal('alertModal')">OK</button>
+    </div>
+               </div>
+               <script>
   const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
@@ -475,7 +504,6 @@
   let isAdmin = false;
   let watermarkEnabled = true;
 
-  /* ===== Форматирование цифр ===== */
   function formatNumber(value) {
     const digits = String(value).replace(/\D/g, '');
     if (!digits) return '';
@@ -486,11 +514,15 @@
     return String(value).replace(/\s/g, '');
   }
 
-  /* ===== Вибрация ===== */
   function vibrate(pattern) {
     if (navigator.vibrate) {
       try { navigator.vibrate(pattern); } catch (e) {}
     }
+  }
+
+  function showAlert(text) {
+    document.getElementById('alertText').textContent = text;
+    document.getElementById('alertModal').classList.add('show');
   }
 
   /* ===== Блокировка горизонтальных свайпов ===== */
@@ -553,16 +585,15 @@
 
     if (!amountRaw || Number(amountRaw) <= 0) {
       vibrate([30, 40, 30]);
-      alert('Введите сумму больше 0');
+      showAlert('Введите сумму больше 0');
       return;
     }
     if (!recipient) {
       vibrate([30, 40, 30]);
-      alert('Введите получателя');
+      showAlert('Введите получателя');
       return;
     }
 
-    /* Двойная вибрация — успех */
     vibrate([50, 60, 50, 60, 80]);
 
     document.getElementById('amountView').textContent =
@@ -663,9 +694,9 @@
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
 
+    /* Без скругления — прямоугольный чек */
     ctx.fillStyle = '#0b0b0b';
-    roundRect(ctx, 0, 0, rect.width, rect.height, 28);
-    ctx.fill();
+    ctx.fillRect(0, 0, rect.width, rect.height);
 
     if (watermarkEnabled) {
       ctx.save();
@@ -735,20 +766,9 @@
     link.click();
   }
 
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     initWatermark();
 
-    /* Автоформатирование цифр при вводе */
     const amountInput = document.getElementById('amountInput');
     const commissionInput = document.getElementById('commissionInput');
 
@@ -785,4 +805,4 @@
 </script>
 
 </body>
- </html>
+</html>
