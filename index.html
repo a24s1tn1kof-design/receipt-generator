@@ -52,10 +52,33 @@
     width: 100%;
   }
 
-  #screenReceipt {
+  #screenReceipt, #screenLoading {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+  }
+
+  /* ===== Экран загрузки ===== */
+  #screenLoading {
+    gap: 22px;
+  }
+  .spinner {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-top-color: #e8e8e8;
+    border-right-color: rgba(232, 232, 232, 0.5);
+    animation: spin 0.85s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .loading-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #b8b8b8;
+    letter-spacing: -0.2px;
   }
 
   .controls {
@@ -405,6 +428,11 @@
     </div>
   </div>
 
+  <div class="screen" id="screenLoading">
+    <div class="spinner"></div>
+    <div class="loading-text">Отправляем перевод...</div>
+  </div>
+
   <div class="screen" id="screenReceipt">
     <div class="receipt-wrap" id="receipt">
       <div class="watermark" id="watermark"></div>
@@ -478,8 +506,8 @@
       <div class="alert-text" id="alertText">Введите сумму больше 0</div>
       <button onclick="closeModal('alertModal')">OK</button>
     </div>
-               </div>
-               <script>
+           </div>
+           <script>
   const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
@@ -537,7 +565,10 @@
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
-    if (!document.getElementById('screenReceipt').classList.contains('active')) return;
+    const receiptActive =
+      document.getElementById('screenReceipt').classList.contains('active') ||
+      document.getElementById('screenLoading').classList.contains('active');
+    if (!receiptActive) return;
     if (e.touches.length !== 1) return;
 
     const dx = Math.abs(e.touches[0].clientX - touchStartX);
@@ -594,20 +625,27 @@
       return;
     }
 
-    vibrate([50, 60, 50, 60, 80]);
+    vibrate(20);
 
-    document.getElementById('amountView').textContent =
-      formatNumber(amountRaw) + ' ₽';
-    document.getElementById('commissionView').textContent =
-      'Комиссия ' + (commissionRaw === '' ? '0' : formatNumber(commissionRaw)) + ' ₽';
-    document.getElementById('recipientView').textContent = recipient;
+    /* Показываем загрузку */
+    showScreen('screenLoading');
 
-    const checkPath = document.querySelector('.check path');
-    checkPath.style.animation = 'none';
-    void checkPath.offsetWidth;
-    checkPath.style.animation = '';
+    /* Через 1.5 сек показываем чек */
+    setTimeout(() => {
+      document.getElementById('amountView').textContent =
+        formatNumber(amountRaw) + ' ₽';
+      document.getElementById('commissionView').textContent =
+        'Комиссия ' + (commissionRaw === '' ? '0' : formatNumber(commissionRaw)) + ' ₽';
+      document.getElementById('recipientView').textContent = recipient;
 
-    showScreen('screenReceipt');
+      const checkPath = document.querySelector('.check path');
+      checkPath.style.animation = 'none';
+      void checkPath.offsetWidth;
+      checkPath.style.animation = '';
+
+      vibrate([50, 60, 50, 60, 80]);
+      showScreen('screenReceipt');
+    }, 1500);
   }
 
   function backToForm() {
@@ -694,7 +732,6 @@
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
 
-    /* Без скругления — прямоугольный чек */
     ctx.fillStyle = '#0b0b0b';
     ctx.fillRect(0, 0, rect.width, rect.height);
 
@@ -805,4 +842,4 @@
 </script>
 
 </body>
-</html>
+ </html>
