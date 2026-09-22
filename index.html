@@ -8,7 +8,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  button, input, a, div, span {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus, input:focus, a:focus {
+    outline: none;
+  }
+
   html, body {
     min-height: 100%;
     overscroll-behavior-y: auto;
@@ -58,7 +73,6 @@
     -webkit-touch-callout: none;
   }
 
-  /* ===== Экран загрузки ===== */
   #screenLoading {
     gap: 22px;
   }
@@ -116,6 +130,8 @@
     outline: none;
     width: 100%;
     transition: border-color 0.2s;
+    -webkit-user-select: text;
+    user-select: text;
   }
   .controls input:focus { border-color: #21a038; }
   .controls input::placeholder { color: #4a4a4a; }
@@ -131,6 +147,7 @@
     cursor: pointer;
     transition: transform 0.1s, opacity 0.2s;
     margin-top: 4px;
+    -webkit-tap-highlight-color: transparent;
   }
   .controls button.ghost {
     background: transparent;
@@ -275,6 +292,7 @@
     transition: transform 0.1s, background 0.15s;
     white-space: nowrap;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
   .btn:hover { background: #232323; }
   .btn:active { transform: scale(0.98); }
@@ -292,6 +310,7 @@
     font-size: 16px;
     cursor: pointer;
     transition: transform 0.1s, opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
   }
   .btn-main:active { transform: scale(0.98); opacity: 0.9; }
 
@@ -342,6 +361,7 @@
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
   .modal button.cancel {
     background: transparent;
@@ -368,6 +388,7 @@
     cursor: pointer;
     transition: 0.2s;
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
   }
   .switch.on { background: #21a038; }
   .switch::after {
@@ -506,8 +527,8 @@
       <div class="alert-text" id="alertText">Введите сумму больше 0</div>
       <button onclick="closeModal('alertModal')">OK</button>
     </div>
-           </div>
-           <script>
+ </div>
+ <script>
   const ADMIN_PASSWORD = "Arseniy3412";
 
   const NAMES = [
@@ -553,7 +574,6 @@
     document.getElementById('alertModal').classList.add('show');
   }
 
-  /* ===== Блокировка горизонтальных свайпов ===== */
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -565,10 +585,10 @@
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
-    const receiptActive =
+    const active =
       document.getElementById('screenReceipt').classList.contains('active') ||
       document.getElementById('screenLoading').classList.contains('active');
-    if (!receiptActive) return;
+    if (!active) return;
     if (e.touches.length !== 1) return;
 
     const dx = Math.abs(e.touches[0].clientX - touchStartX);
@@ -626,11 +646,8 @@
     }
 
     vibrate(20);
-
-    /* Показываем загрузку */
     showScreen('screenLoading');
 
-    /* Через 1.5 сек показываем чек */
     setTimeout(() => {
       document.getElementById('amountView').textContent =
         formatNumber(amountRaw) + ' ₽';
