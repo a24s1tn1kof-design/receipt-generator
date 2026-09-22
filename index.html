@@ -67,7 +67,7 @@
     width: 100%;
   }
 
-  #screenReceipt, #screenLoading {
+  #screenReceipt, #screenLoading, #screenCancelList {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
@@ -158,6 +158,23 @@
     font-weight: 400;
     margin-top: 0;
   }
+  .controls button.admin-link {
+    background: transparent;
+    color: #ff3b30;
+    border: none;
+    font-size: 13px;
+    padding: 10px;
+    font-weight: 500;
+    margin-top: 0;
+    text-align: center;
+  }
+  .controls button.cancel-btn {
+    background: #2a2a2a;
+    color: #fff;
+    font-size: 14px;
+    padding: 13px;
+    font-weight: 500;
+  }
   .controls button:active { transform: scale(0.98); }
 
   .input-with-btn { display: flex; gap: 8px; }
@@ -171,6 +188,124 @@
     border-radius: 12px;
     border: 1px solid #262626;
   }
+
+  /* ===== Экран списка переводов ===== */
+  #screenCancelList {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    width: 100%;
+    padding: 20px 0;
+  }
+  .cancel-panel {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .cancel-panel h2 {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .transfers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  .transfer-item {
+    background: #141414;
+    border: 1px solid #232323;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .transfer-item:hover { background: #1a1a1a; }
+  .transfer-item.selected {
+    border-color: #ff3b30;
+    background: rgba(255, 59, 48, 0.08);
+  }
+  .transfer-item .info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+    text-align: left;
+  }
+  .transfer-item .info .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .transfer-item .info .amount {
+    font-size: 13px;
+    color: #8a8a8a;
+    font-weight: 500;
+  }
+  .transfer-item .check-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    flex-shrink: 0;
+    transition: 0.2s;
+  }
+  .transfer-item.selected .check-circle {
+    border-color: #ff3b30;
+    background: #ff3b30;
+    box-shadow: inset 0 0 0 3px #141414;
+  }
+  .empty-state {
+    font-size: 14px;
+    color: #6b6b6b;
+    text-align: center;
+    padding: 30px 10px;
+  }
+  .cancel-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .cancel-actions button {
+    border: none;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cancel-actions .danger {
+    background: #ff3b30;
+    color: #fff;
+  }
+  .cancel-actions .danger:disabled {
+    background: #3a1a18;
+    color: #7a4a45;
+    cursor: not-allowed;
+  }
+  .cancel-actions .back {
+    background: transparent;
+    color: #888;
+    font-weight: 500;
+  }
+  .cancel-actions button:active:not(:disabled) { transform: scale(0.98); }
 
   .receipt-wrap {
     position: relative;
@@ -237,6 +372,7 @@
     text-align: center;
     width: 100%;
   }
+  .title.cancelled { color: #ff3b30; }
 
   .amount {
     font-size: 42px;
@@ -247,6 +383,11 @@
     line-height: 1;
     text-align: center;
     width: 100%;
+  }
+  .amount.cancelled {
+    color: #ff3b30;
+    text-decoration: line-through;
+    text-decoration-thickness: 3px;
   }
 
   .commission {
@@ -445,13 +586,25 @@
       <input id="commissionInput" type="text" inputmode="numeric" placeholder="Введите комиссию">
 
       <button onclick="submitTransfer()">Перевести</button>
-      <button class="ghost" onclick="openAdmin()">⚙ Админ-панель</button>
+      <button class="cancel-btn" onclick="openCancelList()">Отменить перевод</button>
+      <button class="admin-link" onclick="openAdmin()">⚙ Админ-панель</button>
     </div>
   </div>
 
   <div class="screen" id="screenLoading">
     <div class="spinner"></div>
-    <div class="loading-text">Отправляем перевод...</div>
+    <div class="loading-text" id="loadingText">Отправляем перевод...</div>
+  </div>
+
+  <div class="screen" id="screenCancelList">
+    <div class="cancel-panel">
+      <h2>Мои переводы</h2>
+      <div class="transfers-list" id="transfersList"></div>
+      <div class="cancel-actions">
+        <button class="danger" id="cancelActionBtn" onclick="confirmCancel()" disabled>ОТМЕНИТЬ ПЕРЕВОД</button>
+        <button class="back" onclick="backToForm()">На главный</button>
+      </div>
+    </div>
   </div>
 
   <div class="screen" id="screenReceipt">
@@ -459,7 +612,7 @@
       <div class="watermark" id="watermark"></div>
 
       <div class="receipt-content">
-        <svg class="check" viewBox="0 0 100 100">
+        <svg class="check" viewBox="0 0 100 100" id="checkIcon">
           <defs>
             <linearGradient id="grad" x1="0.15" y1="0.65" x2="0.85" y2="0.25">
               <stop offset="0%"   stop-color="#d4f24a"/>
@@ -476,12 +629,12 @@
                 stroke-linejoin="round"/>
         </svg>
 
-        <div class="title">Перевод доставлен</div>
+        <div class="title" id="receiptTitle">Перевод доставлен</div>
         <div class="amount" id="amountView">— ₽</div>
         <div class="commission" id="commissionView">Комиссия — ₽</div>
         <div class="recipient" id="recipientView">—</div>
 
-        <div class="row">
+        <div class="row" id="receiptRow">
           <button class="btn" onclick="downloadPNG()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -552,6 +705,8 @@
 
   let isAdmin = false;
   let watermarkEnabled = true;
+  let transfers = [];
+  let selectedTransferIndex = null;
 
   function formatNumber(value) {
     const digits = String(value).replace(/\D/g, '');
@@ -629,6 +784,68 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
+  /* ===== Показ чека ===== */
+  function showReceipt(data, cancelled) {
+    document.getElementById('amountView').textContent =
+      formatNumber(data.amount) + ' ₽';
+    document.getElementById('commissionView').textContent =
+      'Комиссия ' + (data.commission === '' ? '0' : formatNumber(data.commission)) + ' ₽';
+    document.getElementById('recipientView').textContent = data.recipient;
+
+    const title = document.getElementById('receiptTitle');
+    const amountEl = document.getElementById('amountView');
+    const checkIcon = document.getElementById('checkIcon');
+    const row = document.getElementById('receiptRow');
+
+    if (cancelled) {
+      title.textContent = 'Перевод отменён';
+      title.classList.add('cancelled');
+      amountEl.classList.add('cancelled');
+      row.style.display = 'none';
+      checkIcon.innerHTML = `
+        <defs>
+          <linearGradient id="gradRed" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ff6b5b"/>
+            <stop offset="100%" stop-color="#ff3b30"/>
+          </linearGradient>
+        </defs>
+        <path d="M30 30 L70 70 M70 30 L30 70"
+              fill="none"
+              stroke="url(#gradRed)"
+              stroke-width="18"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>`;
+    } else {
+      title.textContent = 'Перевод доставлен';
+      title.classList.remove('cancelled');
+      amountEl.classList.remove('cancelled');
+      row.style.display = 'flex';
+      checkIcon.innerHTML = `
+        <defs>
+          <linearGradient id="grad" x1="0.15" y1="0.65" x2="0.85" y2="0.25">
+            <stop offset="0%"   stop-color="#d4f24a"/>
+            <stop offset="35%"  stop-color="#7ee34a"/>
+            <stop offset="65%"  stop-color="#22c55e"/>
+            <stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <path d="M20 50 L40 72 L82 22"
+              fill="none"
+              stroke="url(#grad)"
+              stroke-width="20"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>`;
+    }
+
+    const checkPath = checkIcon.querySelector('path');
+    checkPath.style.animation = 'none';
+    void checkPath.offsetWidth;
+    checkPath.style.animation = 'draw 0.7s ease forwards 0.1s';
+
+    showScreen('screenReceipt');
+  }
+
+  /* ===== Перевести ===== */
   function submitTransfer() {
     const amountRaw = unformatNumber(document.getElementById('amountInput').value);
     const recipient = document.getElementById('recipientInput').value.trim();
@@ -646,22 +863,98 @@
     }
 
     vibrate(20);
+    document.getElementById('loadingText').textContent = 'Отправляем перевод...';
     showScreen('screenLoading');
 
     setTimeout(() => {
-      document.getElementById('amountView').textContent =
-        formatNumber(amountRaw) + ' ₽';
-      document.getElementById('commissionView').textContent =
-        'Комиссия ' + (commissionRaw === '' ? '0' : formatNumber(commissionRaw)) + ' ₽';
-      document.getElementById('recipientView').textContent = recipient;
+      const data = {
+        amount: amountRaw,
+        recipient: recipient,
+        commission: commissionRaw
+      };
 
-      const checkPath = document.querySelector('.check path');
-      checkPath.style.animation = 'none';
-      void checkPath.offsetWidth;
-      checkPath.style.animation = '';
+      transfers.push({
+        amount: amountRaw,
+        recipient: recipient,
+        commission: commissionRaw,
+        cancelled: false
+      });
 
       vibrate([50, 60, 50, 60, 80]);
-      showScreen('screenReceipt');
+      showReceipt(data, false);
+    }, 1500);
+  }
+
+  /* ===== Список для отмены ===== */
+  function openCancelList() {
+    vibrate(20);
+    selectedTransferIndex = null;
+    renderTransfersList();
+    updateCancelBtn();
+    showScreen('screenCancelList');
+  }
+
+  function renderTransfersList() {
+    const list = document.getElementById('transfersList');
+    list.innerHTML = '';
+
+    if (transfers.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'Пока нет ни одного перевода';
+      list.appendChild(empty);
+      return;
+    }
+
+    transfers.forEach((t, i) => {
+      const item = document.createElement('div');
+      item.className = 'transfer-item';
+      if (i === selectedTransferIndex) item.classList.add('selected');
+
+      item.innerHTML = `
+        <div class="info">
+          <div class="name">${t.recipient}</div>
+          <div class="amount">${formatNumber(t.amount)} ₽${t.cancelled ? ' · отменён' : ''}</div>
+        </div>
+        <div class="check-circle"></div>`;
+
+      item.onclick = () => {
+        vibrate(15);
+        if (t.cancelled) {
+          showAlert('Этот перевод уже отменён');
+          return;
+        }
+        selectedTransferIndex = i;
+        renderTransfersList();
+        updateCancelBtn();
+      };
+
+      list.appendChild(item);
+    });
+  }
+
+  function updateCancelBtn() {
+    const btn = document.getElementById('cancelActionBtn');
+    btn.disabled = selectedTransferIndex === null;
+  }
+
+  function confirmCancel() {
+    if (selectedTransferIndex === null) return;
+    const t = transfers[selectedTransferIndex];
+
+    vibrate(30);
+    document.getElementById('loadingText').textContent = 'Отменяем операцию...';
+    showScreen('screenLoading');
+
+    setTimeout(() => {
+      t.cancelled = true;
+      vibrate([80, 40, 80]);
+      showReceipt({
+        amount: t.amount,
+        recipient: t.recipient,
+        commission: t.commission
+      }, true);
+      selectedTransferIndex = null;
     }, 1500);
   }
 
