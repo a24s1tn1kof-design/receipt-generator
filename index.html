@@ -266,6 +266,7 @@
     100% { opacity: 0; transform: translate(-50%, -60px) scale(1.15); }
   }
 
+  /* ===== Кнопки на главной ===== */
   .home-actions {
     display: flex;
     flex-direction: column;
@@ -297,13 +298,19 @@
   }
   .home-actions .admin-link {
     background: transparent;
-    color: #ff3b30;
-    border: none;
+    color: #ff5c52;
+    border: 1px solid rgba(255, 59, 48, 0.4);
     padding: 10px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     font-family: inherit;
+    border-radius: 12px;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .home-actions .admin-link:active {
+    background: rgba(255, 59, 48, 0.08);
+    transform: scale(0.98);
   }
   .home-actions button:active { transform: scale(0.98); }
    /* ===== Форма перевода ===== */
@@ -362,20 +369,23 @@
   }
   .controls button.back {
     background: transparent;
-    color: #888;
+    color: #fff;
     font-weight: 500;
     margin-top: 0;
     font-size: 14px;
+    border: 1px solid #444;
+    border-radius: 14px;
   }
   .controls button.admin-link {
     background: transparent;
-    color: #ff3b30;
-    border: none;
+    color: #ff5c52;
+    border: 1px solid rgba(255, 59, 48, 0.4);
     font-size: 13px;
     padding: 10px;
     font-weight: 500;
     margin-top: 0;
     text-align: center;
+    border-radius: 12px;
   }
   .controls button:active { transform: scale(0.98); }
 
@@ -497,9 +507,10 @@
     cursor: not-allowed;
   }
   .cancel-actions .back {
-    background: transparent;
-    color: #888;
+    background: #2a2a2a;
+    color: #fff;
     font-weight: 500;
+    border: 1px solid #333;
   }
   .cancel-actions button:active:not(:disabled) { transform: scale(0.98); }
 
@@ -1108,7 +1119,6 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
-  /* ===== Навигация ===== */
   function openTransferForm() {
     vibrate(20);
     showScreen('screenForm');
@@ -1120,7 +1130,6 @@
     updateCardBalance();
   }
 
-  /* ===== Кликер ===== */
   function tapCoin() {
     balance += 1000;
     saveState();
@@ -1137,7 +1146,6 @@
     setTimeout(() => { card.style.transform = 'scale(1)'; }, 60);
   }
 
-  /* ===== Чек ===== */
   function showReceipt(data, cancelled, isCustom) {
     const amountEl = document.getElementById('amountView');
     const title = document.getElementById('receiptTitle');
@@ -1204,7 +1212,6 @@
     showScreen('screenReceipt');
   }
 
-  /* ===== Перевод ===== */
   function submitTransfer() {
     const amountRaw = unformatNumber(document.getElementById('amountInput').value);
     const recipient = document.getElementById('recipientInput').value.trim();
@@ -1226,27 +1233,32 @@
       return;
     }
 
-    balance -= Number(amountRaw);
-    saveState();
-    updateCardBalance();
+    vibrate(20);
+    document.getElementById('loadingText').textContent = 'Отправляем перевод...';
+    showScreen('screenLoading');
 
-    transfers.push({
-      amount: amountRaw,
-      recipient: recipient,
-      commission: commissionRaw,
-      cancelled: false
-    });
-    saveState();
+    setTimeout(() => {
+      balance -= Number(amountRaw);
+      saveState();
+      updateCardBalance();
 
-    vibrate([50, 60, 50, 60, 80]);
-    showReceipt({
-      amount: amountRaw,
-      recipient: recipient,
-      commission: commissionRaw
-    }, false, false);
+      transfers.push({
+        amount: amountRaw,
+        recipient: recipient,
+        commission: commissionRaw,
+        cancelled: false
+      });
+      saveState();
+
+      vibrate([50, 60, 50, 60, 80]);
+      showReceipt({
+        amount: amountRaw,
+        recipient: recipient,
+        commission: commissionRaw
+      }, false, false);
+    }, 1500);
   }
 
-  /* ===== Список отмены ===== */
   function openCancelList() {
     vibrate(20);
     selectedTransferIndex = null;
@@ -1303,21 +1315,26 @@
     if (selectedTransferIndex === null) return;
     const t = transfers[selectedTransferIndex];
 
-    t.cancelled = true;
-    balance += Number(t.amount);
-    saveState();
-    updateCardBalance();
+    vibrate(30);
+    document.getElementById('loadingText').textContent = 'Отменяем операцию...';
+    showScreen('screenLoading');
 
-    vibrate([80, 40, 80]);
-    showReceipt({
-      amount: t.amount,
-      recipient: t.recipient,
-      commission: t.commission
-    }, true, false);
-    selectedTransferIndex = null;
+    setTimeout(() => {
+      t.cancelled = true;
+      balance += Number(t.amount);
+      saveState();
+      updateCardBalance();
+
+      vibrate([80, 40, 80]);
+      showReceipt({
+        amount: t.amount,
+        recipient: t.recipient,
+        commission: t.commission
+      }, true, false);
+      selectedTransferIndex = null;
+    }, 1500);
   }
 
-  /* ===== Утилиты ===== */
   function randomRecipient() {
     vibrate(20);
     const el = document.getElementById('recipientInput');
@@ -1446,7 +1463,6 @@
     closeModal('adminModal');
   }
 
-  /* ===== Скачать PNG ===== */
   async function downloadPNG() {
     vibrate(30);
     const node = document.getElementById('receipt');
@@ -1546,7 +1562,6 @@
     link.click();
   }
 
-  /* ===== Инициализация ===== */
   document.addEventListener('DOMContentLoaded', () => {
     initWatermark();
     loadState();
@@ -1578,7 +1593,6 @@
       });
     });
 
-    /* Блокировка двойного тапа — только на экране чека */
     let lastTouch = 0;
     document.addEventListener('touchend', (e) => {
       if (!document.getElementById('screenReceipt').classList.contains('active')) return;
